@@ -118,7 +118,7 @@
     }
   },
   "collection": {
-    "time_window_hours": 6
+    "time_window_hours": 12
   },
   "digest": {
     "max_items": null,

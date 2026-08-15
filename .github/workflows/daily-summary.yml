@@ -2,7 +2,7 @@ name: Daily Horizon Summary
 
 on:
   schedule:
-    - cron: '7 */6 * * *'  # every 6 hours (UTC) — catch news early; off-the-hour to avoid the scheduler pile-up
+    - cron: '7 */12 * * *'  # every 12 hours (UTC) — off-the-hour to avoid the scheduler pile-up
   workflow_dispatch:       # allow manual trigger from the Actions tab
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           HORIZON_WEBHOOK_URL: ${{ secrets.HORIZON_WEBHOOK_URL }}
-        run: uv run horizon --hours 6
+        run: uv run horizon --hours 12
 
       - name: Set current date as environment variable
         run: echo "DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
