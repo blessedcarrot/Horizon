@@ -3,7 +3,7 @@
     "provider": "anthropic",
     "model": "claude-sonnet-5",
     "api_key_env": "ANTHROPIC_API_KEY",
-    "temperature": 0.3,
+    "temperature": 1.0,
     "max_tokens": 4096,
     "throttle_sec": 0,
     "analysis_concurrency": 2,
