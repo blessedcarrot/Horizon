@@ -162,7 +162,8 @@ class AnthropicClient(AIClient):
             max_tokens=max_tokens,
             temperature=temperature,
             system=system,
-            messages=[{"role": "user", "content": user}]
+            messages=[{"role": "user", "content": user}],
+            thinking={"type": "disabled"},
         )
         usage = getattr(message, "usage", None)
         if usage is not None:
