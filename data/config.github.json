@@ -8,7 +8,9 @@
     "throttle_sec": 0,
     "analysis_concurrency": 2,
     "enrichment_concurrency": 1,
-    "languages": ["en"]
+    "languages": [
+      "en"
+    ]
   },
   "processing": {
     "profiles_dir": "profiles",
@@ -40,16 +42,86 @@
   },
   "sources": {
     "github": [
-      { "type": "repo_releases", "owner": "anthropics", "repo": "claude-code", "enabled": true, "category": "ai-tools", "profile": "tech-news" },
-      { "type": "repo_releases", "owner": "anthropics", "repo": "skills", "enabled": true, "category": "ai-tools", "profile": "tech-news" },
-      { "type": "repo_releases", "owner": "openai", "repo": "codex", "enabled": true, "category": "ai-tools", "profile": "tech-news" },
-      { "type": "repo_releases", "owner": "google-gemini", "repo": "gemini-cli", "enabled": true, "category": "ai-tools", "profile": "tech-news" },
-      { "type": "repo_releases", "owner": "github", "repo": "copilot-cli", "enabled": true, "category": "ai-tools", "profile": "tech-news" },
-      { "type": "repo_releases", "owner": "QwenLM", "repo": "qwen-code", "enabled": true, "category": "ai-tools", "profile": "tech-news" },
-      { "type": "repo_releases", "owner": "langchain-ai", "repo": "langchain", "enabled": true, "category": "ai-tools", "profile": "tech-news" },
-      { "type": "repo_releases", "owner": "vllm-project", "repo": "vllm", "enabled": true, "category": "llm-inference", "profile": "tech-news" },
-      { "type": "repo_releases", "owner": "ollama", "repo": "ollama", "enabled": true, "category": "ai-tools", "profile": "tech-news" },
-      { "type": "repo_releases", "owner": "huggingface", "repo": "transformers", "enabled": true, "category": "ai-tools", "profile": "tech-news" }
+      {
+        "type": "repo_releases",
+        "owner": "anthropics",
+        "repo": "claude-code",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-news"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "anthropics",
+        "repo": "skills",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-news"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "openai",
+        "repo": "codex",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-news"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "google-gemini",
+        "repo": "gemini-cli",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-news"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "github",
+        "repo": "copilot-cli",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-news"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "QwenLM",
+        "repo": "qwen-code",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-news"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "langchain-ai",
+        "repo": "langchain",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-news"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "vllm-project",
+        "repo": "vllm",
+        "enabled": true,
+        "category": "llm-inference",
+        "profile": "tech-news"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "ollama",
+        "repo": "ollama",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-news"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "huggingface",
+        "repo": "transformers",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-news"
+      }
     ],
     "hackernews": {
       "enabled": true,
@@ -59,28 +131,178 @@
       "profile": "tech-news"
     },
     "rss": [
-      { "name": "arXiv cs.AI", "url": "https://rss.arxiv.org/rss/cs.AI", "enabled": true, "category": "research", "profile": "tech-news" },
-      { "name": "arXiv cs.CL", "url": "https://rss.arxiv.org/rss/cs.CL", "enabled": true, "category": "research", "profile": "tech-news" },
-      { "name": "arXiv cs.LG", "url": "https://rss.arxiv.org/rss/cs.LG", "enabled": true, "category": "research", "profile": "tech-news" },
-      { "name": "Hugging Face Blog", "url": "https://huggingface.co/blog/feed.xml", "enabled": true, "category": "ai-tools", "profile": "tech-blog", "content_extractor": "trafilatura" },
-      { "name": "Google DeepMind Blog", "url": "https://deepmind.google/blog/rss.xml", "enabled": true, "category": "research-labs", "profile": "tech-news" },
-      { "name": "MIT Technology Review - AI", "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed", "enabled": true, "category": "media", "profile": "tech-news" },
-      { "name": "Simon Willison", "url": "https://simonwillison.net/atom/everything/", "enabled": true, "category": "ai-tools", "profile": "tech-blog", "content_extractor": "trafilatura" },
-      { "name": "The Verge - AI", "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", "enabled": true, "category": "media", "profile": "tech-news" }
+      {
+        "name": "arXiv cs.AI",
+        "url": "https://rss.arxiv.org/rss/cs.AI",
+        "enabled": true,
+        "category": "research",
+        "profile": "tech-news"
+      },
+      {
+        "name": "arXiv cs.CL",
+        "url": "https://rss.arxiv.org/rss/cs.CL",
+        "enabled": true,
+        "category": "research",
+        "profile": "tech-news"
+      },
+      {
+        "name": "arXiv cs.LG",
+        "url": "https://rss.arxiv.org/rss/cs.LG",
+        "enabled": true,
+        "category": "research",
+        "profile": "tech-news"
+      },
+      {
+        "name": "Hugging Face Blog",
+        "url": "https://huggingface.co/blog/feed.xml",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-blog",
+        "content_extractor": "trafilatura"
+      },
+      {
+        "name": "Google DeepMind Blog",
+        "url": "https://deepmind.google/blog/rss.xml",
+        "enabled": true,
+        "category": "research-labs",
+        "profile": "tech-news"
+      },
+      {
+        "name": "MIT Technology Review - AI",
+        "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
+        "enabled": true,
+        "category": "media",
+        "profile": "tech-news"
+      },
+      {
+        "name": "Simon Willison",
+        "url": "https://simonwillison.net/atom/everything/",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-blog",
+        "content_extractor": "trafilatura"
+      },
+      {
+        "name": "The Verge - AI",
+        "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+        "enabled": true,
+        "category": "media",
+        "profile": "tech-news"
+      },
+      {
+        "name": "OpenAI News",
+        "url": "https://openai.com/news/rss.xml",
+        "enabled": true,
+        "category": "research-labs",
+        "profile": "tech-news"
+      },
+      {
+        "name": "Anthropic News (RSSHub mirror)",
+        "url": "https://rsshub.bestblogs.dev/anthropic/news",
+        "enabled": true,
+        "category": "research-labs",
+        "profile": "tech-news"
+      },
+      {
+        "name": "Google AI Blog",
+        "url": "https://blog.google/technology/ai/rss/",
+        "enabled": true,
+        "category": "research-labs",
+        "profile": "tech-news"
+      },
+      {
+        "name": "Google Developers Blog",
+        "url": "https://developers.googleblog.com/feeds/posts/default",
+        "enabled": true,
+        "category": "research-labs",
+        "profile": "tech-news"
+      },
+      {
+        "name": "DeepSeek News (RSSHub mirror)",
+        "url": "https://rsshub.bestblogs.dev/deepseek/news",
+        "enabled": true,
+        "category": "research-labs",
+        "profile": "tech-news"
+      },
+      {
+        "name": "Qwen Blog",
+        "url": "https://qwenlm.github.io/blog/index.xml",
+        "enabled": true,
+        "category": "research-labs",
+        "profile": "tech-news"
+      },
+      {
+        "name": "Cursor Changelog",
+        "url": "https://cursor.com/changelog/rss.xml",
+        "enabled": true,
+        "category": "ai-tools",
+        "profile": "tech-news"
+      },
+      {
+        "name": "smol.ai AINews",
+        "url": "https://news.smol.ai/rss.xml",
+        "enabled": true,
+        "category": "newsletters",
+        "profile": "tech-news",
+        "content_extractor": "trafilatura"
+      },
+      {
+        "name": "TLDR AI",
+        "url": "https://tldr.tech/api/rss/ai",
+        "enabled": true,
+        "category": "newsletters",
+        "profile": "tech-news",
+        "content_extractor": "trafilatura"
+      }
     ],
     "reddit": {
       "enabled": true,
       "fetch_comments": 5,
       "subreddits": [
-        { "subreddit": "MachineLearning", "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 15, "min_score": 50, "category": "ai-ml", "profile": "tech-news" },
-        { "subreddit": "LocalLLaMA", "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 15, "min_score": 30, "category": "ai-ml", "profile": "tech-news" },
-        { "subreddit": "artificial", "enabled": true, "sort": "hot", "time_filter": "day", "fetch_limit": 10, "min_score": 30, "category": "ai-ml", "profile": "tech-news" }
+        {
+          "subreddit": "MachineLearning",
+          "enabled": true,
+          "sort": "hot",
+          "time_filter": "day",
+          "fetch_limit": 15,
+          "min_score": 50,
+          "category": "ai-ml",
+          "profile": "tech-news"
+        },
+        {
+          "subreddit": "LocalLLaMA",
+          "enabled": true,
+          "sort": "hot",
+          "time_filter": "day",
+          "fetch_limit": 15,
+          "min_score": 30,
+          "category": "ai-ml",
+          "profile": "tech-news"
+        },
+        {
+          "subreddit": "artificial",
+          "enabled": true,
+          "sort": "hot",
+          "time_filter": "day",
+          "fetch_limit": 10,
+          "min_score": 30,
+          "category": "ai-ml",
+          "profile": "tech-news"
+        }
       ],
       "users": []
     },
     "twitter": {
       "enabled": false,
-      "users": ["karpathy", "sama", "AnthropicAI", "OpenAI", "GoogleDeepMind", "ylecun", "_akhaliq"],
+      "users": [
+        "karpathy",
+        "sama",
+        "AnthropicAI",
+        "OpenAI",
+        "GoogleDeepMind",
+        "ylecun",
+        "_akhaliq"
+      ],
       "fetch_limit": 100,
       "category": "social",
       "fetch_reply_text": false,
@@ -92,8 +314,20 @@
     "ossinsight": {
       "enabled": true,
       "period": "past_24_hours",
-      "languages": ["All", "Python", "TypeScript"],
-      "keywords": ["ai", "llm", "agent", "rag", "gpt", "diffusion", "transformer"],
+      "languages": [
+        "All",
+        "Python",
+        "TypeScript"
+      ],
+      "keywords": [
+        "ai",
+        "llm",
+        "agent",
+        "rag",
+        "gpt",
+        "diffusion",
+        "transformer"
+      ],
       "min_stars": 10,
       "max_items": 30,
       "category": "oss-trending",
@@ -101,7 +335,7 @@
     },
     "gdelt": {
       "enabled": true,
-      "query": "Anthropic OR OpenAI",
+      "query": "Anthropic OR OpenAI OR xAI OR Grok OR DeepSeek OR Qwen OR \"Mistral AI\" OR \"Meta AI\" OR \"Moonshot AI\" OR \"Google Gemini\"",
       "mode": "ArtList",
       "max_records": 75,
       "category": "vendor-watch",
@@ -109,7 +343,7 @@
     },
     "google_news": {
       "enabled": true,
-      "query": "Anthropic OR OpenAI",
+      "query": "Anthropic OR OpenAI OR xAI OR Grok OR DeepSeek OR Qwen OR \"Mistral AI\" OR \"Meta AI\" OR \"Moonshot AI\" OR \"Google Gemini\"",
       "language": "en",
       "country": "US",
       "max_results": 50,
@@ -122,7 +356,10 @@
   },
   "digest": {
     "max_items": null,
-    "profile_order": ["tech-news", "tech-blog"],
+    "profile_order": [
+      "tech-news",
+      "tech-blog"
+    ],
     "category_groups": {},
     "default_group": "other",
     "default_group_limit": null
@@ -135,7 +372,9 @@
     "platform": "generic",
     "layout": "markdown",
     "fallback_layout": "markdown",
-    "languages": ["en"],
+    "languages": [
+      "en"
+    ],
     "request_body": {
       "text": "#{message_title}\n#{summary}"
     },
