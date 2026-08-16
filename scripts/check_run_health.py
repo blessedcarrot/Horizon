@@ -42,6 +42,10 @@ WARNING_RE = re.compile(r"(?:^|\])\s*WARNING\s{2,}")
 # GitHub renders ~10 annotations per level per step; group and cap below that.
 MAX_ANNOTATIONS = 8
 FOUND_RE = re.compile(r"Found (\d+) items? from (.+?)\s*$")
+# Per-sub-source breakdown lines, e.g. "      • The Verge - AI: 1" or
+# "      • OpenAI News: 0 (FAILED)". Only those printed during fetching are
+# collected — the same format is reused later for selected items.
+DETAIL_RE = re.compile(r"^\s*•\s*(?P<name>.+?):\s*(?P<count>\d+)(?P<failed>\s*\(FAILED\))?\s*$")
 FETCHED_RE = re.compile(r"Fetched (\d+) items? from all sources")
 ANALYZED_RE = re.compile(r"Analyzed (\d+) items? with AI")
 SELECTED_RE = re.compile(r"Selected (\d+) items? with profile filters")
@@ -49,16 +53,27 @@ SELECTED_RE = re.compile(r"Selected (\d+) items? with profile filters")
 
 def parse_log(path: Path):
     per_source: dict[str, int] = {}
+    per_feed: dict[str, tuple[int, bool]] = {}
     totals = {"fetched": None, "analyzed": None, "selected": None}
     errors: list[str] = []
     warnings = 0
+    fetching = True  # detail lines only count before fetching ends
+    current_source = None
 
     for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
         line = ISO_PREFIX_RE.sub("", ANSI_RE.sub("", raw))
         if m := FOUND_RE.search(line):
-            per_source[m.group(2)] = int(m.group(1))
+            current_source = m.group(2)
+            per_source[current_source] = int(m.group(1))
+        # Only RSS reports what it attempted, so only its breakdown can show a
+        # feed that returned nothing. Other scrapers' breakdowns are derived
+        # from returned items (Google News lists ~50 publishers), which would
+        # bury the signal this section exists for.
+        elif fetching and current_source == "RSS Feeds" and (m := DETAIL_RE.match(line)):
+            per_feed[m.group("name")] = (int(m.group("count")), bool(m.group("failed")))
         elif m := FETCHED_RE.search(line):
             totals["fetched"] = int(m.group(1))
+            fetching = False
         elif m := ANALYZED_RE.search(line):
             totals["analyzed"] = int(m.group(1))
         elif m := SELECTED_RE.search(line):
@@ -68,7 +83,7 @@ def parse_log(path: Path):
         if WARNING_RE.search(line):
             warnings += 1
 
-    return per_source, totals, errors, warnings
+    return per_source, per_feed, totals, errors, warnings
 
 
 def group_errors(errors: list[str]) -> list[tuple[str, int]]:
@@ -93,7 +108,7 @@ def annotate(level: str, message: str) -> None:
     print(f"::{level}::{clean}")
 
 
-def emit_annotations(per_source, totals, grouped, warnings) -> None:
+def emit_annotations(per_source, per_feed, totals, grouped, warnings) -> None:
     headline = (
         f"Radar run: {totals['fetched']} fetched, {totals['analyzed']} analyzed, "
         f"{totals['selected']} cleared threshold, "
@@ -108,6 +123,12 @@ def emit_annotations(per_source, totals, grouped, warnings) -> None:
             "Zero across several consecutive runs means dead.",
         )
 
+    if failed := sorted(n for n, (_, f) in (per_feed or {}).items() if f):
+        # Warning, not error: Horizon logs feed failures as warnings and the job
+        # stays green, so a red annotation here would contradict the job status.
+        # Still louder than a zero-item feed, which may simply be quiet.
+        annotate("warning", f"Feeds that FAILED to fetch: {', '.join(failed)}")
+
     for sig, count in grouped[:MAX_ANNOTATIONS]:
         annotate("error", f"{count}x {sig[:300]}")
     if len(grouped) > MAX_ANNOTATIONS:
@@ -118,7 +139,7 @@ def emit_annotations(per_source, totals, grouped, warnings) -> None:
         )
 
 
-def build_report(per_source, totals, grouped, warnings) -> str:
+def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
     zero_sources = sorted(n for n, c in per_source.items() if c == 0)
     error_count = sum(c for _, c in grouped)
     lines = ["## Run health", ""]
@@ -135,6 +156,19 @@ def build_report(per_source, totals, grouped, warnings) -> str:
             f"- ⚠️ **Sources returning zero items:** {', '.join(zero_sources)}"
             " — quiet or dead? Zero across several consecutive runs means dead."
         )
+    if per_feed:
+        failed = sorted(n for n, (_, f) in per_feed.items() if f)
+        empty = sorted(n for n, (c, f) in per_feed.items() if c == 0 and not f)
+        live = sorted(((n, c) for n, (c, f) in per_feed.items() if c > 0),
+                      key=lambda kv: -kv[1])
+        if failed:
+            lines.append(f"- 🔴 **Feeds that FAILED to fetch:** {', '.join(failed)}")
+        if live:
+            lines.append("- **Feeds with items:** "
+                         + ", ".join(f"{n}: {c}" for n, c in live))
+        if empty:
+            lines.append(f"- **Feeds with nothing in window ({len(empty)}):** "
+                         + ", ".join(empty))
     if grouped:
         lines.append(
             f"- 🔴 **{error_count} ERROR line(s), {len(grouped)} distinct type(s)**"
@@ -179,11 +213,11 @@ def main() -> int:
                     help="posts dir; appends footer to today's summary files")
     args = ap.parse_args()
 
-    per_source, totals, errors, warnings = parse_log(args.logfile)
+    per_source, per_feed, totals, errors, warnings = parse_log(args.logfile)
     grouped = group_errors(errors)
-    report = build_report(per_source, totals, grouped, warnings)
+    report = build_report(per_source, per_feed, totals, grouped, warnings)
     print(report)
-    emit_annotations(per_source, totals, grouped, warnings)
+    emit_annotations(per_source, per_feed, totals, grouped, warnings)
 
     import os
     if summary_path := os.environ.get("GITHUB_STEP_SUMMARY"):

@@ -48,12 +48,19 @@ class RSSScraper(BaseScraper):
         """
         items = []
         sources = self.config["sources"]
+        # Per-feed tally, including feeds that returned nothing. The
+        # orchestrator's breakdown is derived from the items returned, so a feed
+        # yielding zero is invisible there — across many feeds that makes one
+        # broken feed indistinguishable from all of them simply being quiet.
+        self.attempted_counts = {}
+        self.failed_feeds = set()
 
         for source in sources:
             if not source.enabled:
                 continue
 
             feed_items = await self._fetch_feed(source, since)
+            self.attempted_counts[source.name] = len(feed_items)
             items.extend(feed_items)
 
         return items
@@ -130,8 +137,10 @@ class RSSScraper(BaseScraper):
                 items.append(item)
 
         except httpx.HTTPError as e:
+            getattr(self, "failed_feeds", set()).add(source.name)
             logger.warning("Error fetching RSS feed %s: %s", source.name, e)
         except Exception as e:
+            getattr(self, "failed_feeds", set()).add(source.name)
             logger.warning("Error parsing RSS feed %s: %s", source.name, e)
 
         return items

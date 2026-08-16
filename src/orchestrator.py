@@ -328,7 +328,10 @@ class HorizonOrchestrator:
                         "layout: default\n"
                         f"title: \"Horizon Summary: {today} "
                         f"{now_utc.strftime('%H:%M')} UTC ({lang.upper()})\"\n"
-                        f"date: {today}\n"
+                        # Full timestamp, not just the date: Jekyll orders posts
+                        # by this field, and with several runs a day a date-only
+                        # value leaves same-day posts in an arbitrary order.
+                        f"date: {now_utc.strftime('%Y-%m-%d %H:%M:%S %z')}\n"
                         f"lang: {lang}\n"
                         "---\n\n"
                     )
@@ -527,13 +530,24 @@ class HorizonOrchestrator:
 
         self.console.print(f"   Found {len(items)} items from {name}")
 
-        # Show per-sub-source breakdown when there are multiple sub-sources
-        sub_counts: Dict[str, int] = defaultdict(int)
-        for item in items:
-            sub_counts[self._sub_source_label(item)] += 1
-        if len(sub_counts) > 1:
-            for sub, count in sorted(sub_counts.items()):
-                self.console.print(f"      {self.icons['detail']} {sub}: {count}")
+        # Prefer a scraper's own tally of what it attempted: a breakdown derived
+        # from returned items cannot show a sub-source that returned nothing,
+        # which is exactly the case worth seeing (dead feed vs quiet feed).
+        attempted: Dict[str, int] = getattr(scraper, "attempted_counts", None) or {}
+        failed = getattr(scraper, "failed_feeds", None) or set()
+        if attempted:
+            for sub, count in sorted(attempted.items()):
+                suffix = " (FAILED)" if sub in failed else ""
+                self.console.print(
+                    f"      {self.icons['detail']} {sub}: {count}{suffix}"
+                )
+        else:
+            sub_counts: Dict[str, int] = defaultdict(int)
+            for item in items:
+                sub_counts[self._sub_source_label(item)] += 1
+            if len(sub_counts) > 1:
+                for sub, count in sorted(sub_counts.items()):
+                    self.console.print(f"      {self.icons['detail']} {sub}: {count}")
 
         return SourceFetchOutcome(
             source_name=name,
