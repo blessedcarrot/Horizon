@@ -95,10 +95,13 @@ def build_message(health: dict, run_type: str) -> str:
     header += f" · {esc(run_type)}"
     lines = [header]
 
+    nothing_cleared = stats.get("selected") == 0 and not health.get("incomplete")
     if health.get("incomplete"):
         lines.append("🔴 <b>The run failed before the health check ran</b> — "
                      "no digest was produced.")
         errors = 0  # don't also print the generic error block below
+    elif nothing_cleared:
+        lines.append(f'Nothing met the threshold · {stats.get("analyzed")} analyzed')
     else:
         lines.append(
             f'{stats.get("selected")} cleared threshold · '
@@ -121,8 +124,11 @@ def build_message(health: dict, run_type: str) -> str:
     if zero := health.get("zero_sources"):
         lines.append(f"⚠️ No items from: {esc(', '.join(zero))}\n")
 
+    # Trust the run's own count over the digest file: if nothing cleared, don't
+    # list whatever the page happens to contain. The two only disagree when the
+    # page is stale, but a message contradicting itself is worse than a terse one.
     for post in posts:
-        items = parse_items(Path(post))
+        items = [] if nothing_cleared else parse_items(Path(post))
         link = post_url(post, base)
         for item in items[:MAX_ITEMS_SHOWN]:
             host = urllib.parse.urlparse(item["url"]).netloc.removeprefix("www.")

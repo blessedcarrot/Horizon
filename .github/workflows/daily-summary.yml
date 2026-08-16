@@ -64,7 +64,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python scripts/notify_telegram.py
+        run: python scripts/notify_telegram.py --always
 
       # Runs AFTER deploy so a broken run still publishes its digest;
       # the red X on the run is the "go read the log" signal.
