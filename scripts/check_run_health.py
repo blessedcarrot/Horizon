@@ -26,8 +26,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+# Downloaded Actions job logs prefix every line with an ISO timestamp that raw
+# stdout doesn't have. Strip it so the same script works on either, which
+# matters because after-the-fact debugging uses the downloaded job log.
+ISO_PREFIX_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s?")
 TIMESTAMP_RE = re.compile(r"^\[?\d{2}/\d{2}/\d{2}[^]]*\]?\s*")
 QUOTED_RE = re.compile(r"'[^']*'|\"[^\"]*\"")
+# Match ERROR/WARNING only in the log-level column (line start, or after the
+# timestamp bracket, followed by the level's padding) so a story title
+# containing the word "ERROR" can't fail the job. This gates the build, so a
+# false positive would cry wolf and erode trust in the signal.
+ERROR_RE = re.compile(r"(?:^|\])\s*ERROR\s{2,}")
+WARNING_RE = re.compile(r"(?:^|\])\s*WARNING\s{2,}")
 # GitHub renders ~10 annotations per level per step; group and cap below that.
 MAX_ANNOTATIONS = 8
 FOUND_RE = re.compile(r"Found (\d+) items? from (.+?)\s*$")
@@ -43,7 +53,7 @@ def parse_log(path: Path):
     warnings = 0
 
     for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = ANSI_RE.sub("", raw)
+        line = ISO_PREFIX_RE.sub("", ANSI_RE.sub("", raw))
         if m := FOUND_RE.search(line):
             per_source[m.group(2)] = int(m.group(1))
         elif m := FETCHED_RE.search(line):
@@ -52,9 +62,9 @@ def parse_log(path: Path):
             totals["analyzed"] = int(m.group(1))
         elif m := SELECTED_RE.search(line):
             totals["selected"] = int(m.group(1))
-        if " ERROR " in line or line.lstrip().startswith("ERROR"):
+        if ERROR_RE.search(line):
             errors.append(line.strip()[:200])
-        if " WARNING " in line:
+        if WARNING_RE.search(line):
             warnings += 1
 
     return per_source, totals, errors, warnings
@@ -159,8 +169,11 @@ def main() -> int:
     if args.append_digest and args.append_digest.is_dir():
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         for post in sorted(args.append_digest.glob(f"{today}-summary-*.md")):
+            # Digests already end with a horizontal rule; don't stack a second.
+            existing = post.read_text(encoding="utf-8").rstrip()
+            separator = "\n\n" if existing.endswith("---") else "\n\n---\n\n"
             with open(post, "a", encoding="utf-8") as f:
-                f.write("\n\n---\n\n" + report)
+                f.write(separator + report)
             print(f"Appended health footer to {post}")
 
     Path("health_errors.txt").write_text(str(len(errors)), encoding="utf-8")
