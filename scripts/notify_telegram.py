@@ -171,11 +171,19 @@ def main() -> int:
                     help="notify even when nothing cleared threshold")
     ap.add_argument("--dry-run", action="store_true",
                     help="print the message instead of sending it")
+    ap.add_argument("--self-test", action="store_true",
+                    help="send a sample message to verify credentials and "
+                         "delivery without running the pipeline")
     args = ap.parse_args()
 
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     if not args.dry_run and not (token and chat_id):
+        if args.self_test:
+            # Silence is the correct behavior for a normal run without
+            # secrets, but for a self-test it is the failure being tested.
+            print("Telegram secrets are not set — nothing to test.")
+            return 1
         print("Telegram secrets not set — skipping notification.")
         return 0
 
@@ -183,6 +191,29 @@ def main() -> int:
         os.environ.get("GITHUB_EVENT_NAME", ""),
         os.environ.get("GITHUB_EVENT_NAME") or "local",
     )
+
+    if args.self_test:
+        # Verifies the whole delivery path — secrets, network, formatting —
+        # without a pipeline run, which otherwise costs a couple of minutes
+        # of model calls per attempt. Use after rotating credentials too.
+        message = (
+            "🧪 <b>Radar test message</b>\n"
+            f"Triggered {esc(run_type)}.\n\n"
+            "If you can read this, <code>TELEGRAM_BOT_TOKEN</code> and "
+            "<code>TELEGRAM_CHAT_ID</code> are set correctly and run "
+            "notifications will arrive here.\n\n"
+            '→ <a href="https://blessedcarrot.github.io/Horizon/">The radar</a>'
+        )
+        if args.dry_run:
+            print(message)
+            return 0
+        try:
+            send(token, chat_id, message)
+            print("Test message sent.")
+        except Exception as e:  # noqa: BLE001
+            print(f"Test message FAILED: {e}")
+            return 1  # a failed self-test should be visibly red
+        return 0
 
     if args.health.is_file():
         health = json.loads(args.health.read_text(encoding="utf-8"))

@@ -1,0 +1,30 @@
+name: Test Telegram Notification
+
+# Manual only. Verifies the Telegram credentials and delivery path without
+# running the radar, which would otherwise cost a couple of minutes of model
+# calls per attempt. Useful after setting or rotating the secrets.
+on:
+  workflow_dispatch:
+
+jobs:
+  test-telegram:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Send test message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::error::TELEGRAM_BOT_TOKEN and/or TELEGRAM_CHAT_ID is not set on this repository."
+            exit 1
+          fi
+          python scripts/notify_telegram.py --self-test
