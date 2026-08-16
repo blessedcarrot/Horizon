@@ -20,6 +20,7 @@ Effects:
 """
 
 import argparse
+import json
 import re
 import sys
 from datetime import datetime, timezone
@@ -189,8 +190,10 @@ def main() -> int:
         with open(summary_path, "a", encoding="utf-8") as f:
             f.write(report)
 
+    posts: list[Path] = []
     if args.append_digest and args.append_digest.is_dir():
-        for post in todays_posts(args.append_digest):
+        posts = todays_posts(args.append_digest)
+        for post in posts:
             # Digests already end with a horizontal rule; don't stack a second.
             existing = post.read_text(encoding="utf-8").rstrip()
             separator = "\n\n" if existing.endswith("---") else "\n\n---\n\n"
@@ -199,6 +202,17 @@ def main() -> int:
             print(f"Appended health footer to {post}")
 
     Path("health_errors.txt").write_text(str(len(errors)), encoding="utf-8")
+    # Machine-readable form for notify_telegram.py, so the notifier doesn't
+    # have to re-parse the log and the two can't disagree about a run.
+    Path("health_summary.json").write_text(json.dumps({
+        "totals": totals,
+        "per_source": per_source,
+        "zero_sources": sorted(n for n, c in per_source.items() if c == 0),
+        "errors": len(errors),
+        "warnings": warnings,
+        "posts": [str(p) for p in posts],
+        "finished_utc": datetime.now(timezone.utc).strftime("%d %b %H:%M"),
+    }, indent=2), encoding="utf-8")
     return 0
 
 

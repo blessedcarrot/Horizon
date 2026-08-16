@@ -57,6 +57,15 @@ jobs:
           publish_branch: gh-pages
           enable_jekyll: true
 
+      # After the deploy so the link in the message actually resolves.
+      # always() so a run that died earlier still notifies.
+      - name: Notify via Telegram
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/notify_telegram.py
+
       # Runs AFTER deploy so a broken run still publishes its digest;
       # the red X on the run is the "go read the log" signal.
       - name: Fail job if items errored during the run
