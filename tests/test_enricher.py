@@ -254,8 +254,7 @@ def test_enrichment_repairs_malformed_tool_plan_once():
     asyncio.run(enricher._enrich_item(item))
 
     assert len(requests) == 3
-    assert all(request["temperature"] == 0 for request in requests)
-    assert requests[1]["temperature"] == 0
+    assert all("temperature" not in request for request in requests)
     assert item.processing.artifacts["en"].blocks[0].id == "summary"
 
 
@@ -333,7 +332,7 @@ def test_enrichment_repairs_empty_blog_block_once():
     asyncio.run(enricher._enrich_item(item))
 
     assert len(requests) == 2
-    assert requests[1]["temperature"] == 0
+    assert "temperature" not in requests[1]
     assert "corrected JSON object" in requests[1]["user"]
     assert [
         block.id for block in item.processing.artifacts["en"].blocks

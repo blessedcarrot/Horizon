@@ -194,7 +194,7 @@ def test_analyze_item_repairs_invalid_result_once():
     )
 
     assert len(requests) == 2
-    assert requests[1]["temperature"] == 0
+    assert "temperature" not in requests[1]
     assert item.processing is not None
     assert item.processing.analysis is not None
     assert item.processing.analysis.score == 8

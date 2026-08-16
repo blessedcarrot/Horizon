@@ -166,7 +166,6 @@ class ContentAnalyzer:
                     + "\n\nYour previous response did not satisfy the output contract "
                     f"({failure}). Analyze the item again and return only the required JSON object."
                 ),
-                temperature=0,
             )
             result, failure = self._validate_analysis_response(repair_response)
 

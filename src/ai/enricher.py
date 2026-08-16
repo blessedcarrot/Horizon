@@ -161,7 +161,6 @@ class ContentEnricher:
             request: dict[str, Any] = {
                 "system": system,
                 "user": user,
-                "temperature": 0,
             }
             response = await self._complete(**request)
             parsed = parse_json_response(response)
