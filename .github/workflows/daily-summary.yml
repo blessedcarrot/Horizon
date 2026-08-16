@@ -35,7 +35,12 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           HORIZON_WEBHOOK_URL: ${{ secrets.HORIZON_WEBHOOK_URL }}
-        run: uv run horizon --hours 12
+        run: |
+          set -o pipefail
+          uv run horizon --hours 12 2>&1 | tee horizon-run.log
+
+      - name: "Run health check (BACKLOG #5/#6 - distinguish quiet from broken)"
+        run: python scripts/check_run_health.py horizon-run.log --append-digest docs/_posts
 
       - name: Set current date as environment variable
         run: echo "DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
@@ -49,3 +54,13 @@ jobs:
           commit_message: "📝 Radar update: ${{ env.DATE }}"
           publish_branch: gh-pages
           enable_jekyll: true
+
+      # Runs AFTER deploy so a broken run still publishes its digest;
+      # the red X on the run is the "go read the log" signal.
+      - name: Fail job if items errored during the run
+        run: |
+          ERRS=$(cat health_errors.txt 2>/dev/null || echo 0)
+          if [ "$ERRS" -gt 0 ]; then
+            echo "::error::$ERRS ERROR line(s) during Horizon run — digest may be silently incomplete. See health report in step summary."
+            exit 1
+          fi

@@ -225,9 +225,9 @@
         "profile": "tech-news"
       },
       {
-        "name": "Qwen Blog",
+        "name": "Qwen Blog (DEAD - abandoned Sep 2025, no successor feed found)",
         "url": "https://qwenlm.github.io/blog/index.xml",
-        "enabled": true,
+        "enabled": false,
         "category": "research-labs",
         "profile": "tech-news"
       },
