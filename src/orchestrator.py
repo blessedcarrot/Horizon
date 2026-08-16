@@ -333,6 +333,10 @@ class HorizonOrchestrator:
                         # value leaves same-day posts in an arbitrary order.
                         f"date: {now_utc.strftime('%Y-%m-%d %H:%M:%S %z')}\n"
                         f"lang: {lang}\n"
+                        # Counts in front matter so the index can show what a
+                        # run produced without opening it.
+                        f"items: {len(important_items)}\n"
+                        f"analyzed: {len(all_items)}\n"
                         "---\n\n"
                     )
 

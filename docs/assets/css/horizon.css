@@ -1,191 +1,312 @@
-/* ===== Horizon Custom Styles ===== */
+/* ===== NEWS-Radar — instrument theme =====
+   Overrides jekyll-theme-cayman. Design intent: an instrument readout, not a
+   blog. Monospace carries structure and numbers; a reading face carries the
+   analysis prose, which runs to a few hundred words per item. Exactly one
+   accent, spent only on scores and links, so the eye tracks significance
+   rather than decoration. Dark-first, light honoured when the OS asks.      */
 
-/* --- CSS Variables & Dark Mode (Horizon Dawn) --- */
-/* Palette derived from horizon-header.svg sunrise:
-   #312e81 deep indigo · #be185d rose · #f97316 orange · #fbbf24 gold
-   #4c1d95 mountain purple · #701a75 distant purple                  */
 :root {
-  --hz-bg: #faf8f5;          /* warm parchment white */
-  --hz-surface: #f3f0eb;     /* slightly warm gray */
-  --hz-border: #e0dbd3;      /* warm border */
-  --hz-text: #2d2a3e;        /* deep indigo-ink */
-  --hz-text-muted: #7c7891;  /* muted lavender gray */
-  --hz-link: #6d4aaa;        /* mountain purple, lighter */
-  --hz-code-bg: #f0ede7;     /* warm code bg */
-  --hz-accent: #e0652e;      /* sunrise orange, toned down */
+  --hz-bg: #0d1117;
+  --hz-surface: #151b23;
+  --hz-surface-2: #1c232d;
+  --hz-border: #263040;
+  --hz-text: #e6edf3;
+  --hz-text-muted: #8b98a9;
+  --hz-text-faint: #5c6773;
+  --hz-accent: #ffb224;        /* amber — the single signal colour */
+  --hz-accent-dim: #7a5613;
+  --hz-link: #6cb6ff;
+  --hz-mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo,
+             Consolas, "Liberation Mono", monospace;
+  --hz-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
+             "Helvetica Neue", Arial, sans-serif;
+  --hz-radius: 6px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --hz-bg: #1a1726;        /* pre-dawn deep purple-black */
-    --hz-surface: #231f33;   /* night sky surface */
-    --hz-border: #342f4a;    /* indigo border */
-    --hz-text: #e8e4f0;      /* moonlight white-lavender */
-    --hz-text-muted: #8c86a0; /* muted twilight */
-    --hz-link: #f0a848;      /* dawn gold */
-    --hz-code-bg: #211d30;   /* deep code bg */
-    --hz-accent: #e87040;    /* sunrise orange-coral */
+    --hz-bg: #fbfcfd;
+    --hz-surface: #f2f5f8;
+    --hz-surface-2: #e9eef4;
+    --hz-border: #d5dde6;
+    --hz-text: #10171f;
+    --hz-text-muted: #55606d;
+    --hz-text-faint: #7b8794;
+    --hz-accent: #b26a00;
+    --hz-accent-dim: #f0d9ac;
+    --hz-link: #0a5ac9;
   }
 }
 
-/* Apply variables to base elements */
 body {
   background-color: var(--hz-bg) !important;
   color: var(--hz-text) !important;
+  font-family: var(--hz-sans) !important;
+  -webkit-font-smoothing: antialiased;
 }
 
-a {
-  color: var(--hz-link) !important;
-}
+a { color: var(--hz-link) !important; }
+a:hover { color: var(--hz-accent) !important; }
+hr { border: 0 !important; border-top: 1px solid var(--hz-border) !important; }
 
+code, pre, kbd, samp { font-family: var(--hz-mono) !important; }
 code {
-  background-color: var(--hz-code-bg) !important;
+  background-color: var(--hz-surface-2) !important;
   color: var(--hz-text) !important;
+  border-radius: 3px;
 }
-
 pre {
-  background-color: var(--hz-code-bg) !important;
+  background-color: var(--hz-surface) !important;
   color: var(--hz-text) !important;
   border: 1px solid var(--hz-border) !important;
+  border-radius: var(--hz-radius) !important;
 }
 
-hr {
-  border-color: var(--hz-border) !important;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  color: var(--hz-text) !important;
-  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif !important;
-  font-weight: 800 !important;
-}
-
-/* Override Cayman header gradient — Horizon sunrise from SVG */
+/* --- Header: a status bar, not a hero banner --- */
 .page-header {
-  background: linear-gradient(120deg, #312e81, #be185d, #f97316) !important;
+  background: var(--hz-surface) !important;
+  border-bottom: 1px solid var(--hz-border);
+  padding: 2.2rem 1rem 2rem !important;
+  position: relative;
 }
-
+/* Hairline of accent along the top — the "instrument on" cue. */
+.page-header::before {
+  content: "";
+  position: absolute; inset: 0 0 auto 0; height: 2px;
+  background: linear-gradient(90deg, var(--hz-accent), transparent 65%);
+}
 .page-header h1,
 .page-header h2,
-.page-header .project-tagline,
-.page-header a {
-  color: #fff !important;
+.page-header .project-name {
+  color: var(--hz-text) !important;
+  font-family: var(--hz-mono) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+}
+.page-header .project-tagline {
+  color: var(--hz-text-muted) !important;
+  font-family: var(--hz-mono) !important;
+  font-size: 0.95rem !important;
+  opacity: 1 !important;
+}
+.page-header a.btn {
+  background: transparent !important;
+  border: 1px solid var(--hz-border) !important;
+  color: var(--hz-text-muted) !important;
+  font-family: var(--hz-mono) !important;
+  font-size: 0.8rem !important;
+  border-radius: var(--hz-radius) !important;
+}
+.page-header a.btn:hover {
+  border-color: var(--hz-accent) !important;
+  color: var(--hz-accent) !important;
 }
 
-/* --- Score Badge --- */
+.main-content { color: var(--hz-text) !important; }
+.main-content h1,
+.main-content h2,
+.main-content h3,
+.main-content h4 {
+  color: var(--hz-text) !important;
+  font-family: var(--hz-mono) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+}
+.main-content h1 { border-bottom: 1px solid var(--hz-border); padding-bottom: .3em; }
+
+/* --- Intro --- */
+.radar-intro {
+  border-left: 2px solid var(--hz-accent);
+  padding: 0.1rem 0 0.1rem 1rem;
+  margin: 0 0 2rem;
+  color: var(--hz-text-muted);
+  max-width: 62ch;
+}
+.radar-intro strong { color: var(--hz-text); }
+
+.rss-btn {
+  display: inline-flex; align-items: center; gap: .5em;
+  margin-top: .9rem;
+  padding: .35em .8em;
+  border: 1px solid var(--hz-border);
+  border-radius: var(--hz-radius);
+  font-family: var(--hz-mono);
+  font-size: .8rem;
+  color: var(--hz-text-muted) !important;
+  text-decoration: none;
+}
+.rss-btn svg { width: .85em; height: .85em; }
+.rss-btn:hover { border-color: var(--hz-accent); color: var(--hz-accent) !important; }
+
+/* --- Section labels: small, monospaced, quiet --- */
+.section-label {
+  font-family: var(--hz-mono) !important;
+  font-size: .75rem !important;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--hz-text-faint) !important;
+  border-bottom: 1px solid var(--hz-border);
+  padding-bottom: .5em;
+  margin: 2.4rem 0 .6rem !important;
+}
+
+/* --- Run log: the homepage's centrepiece --- */
+.run-log { list-style: none; margin: 0 0 1rem; padding: 0; }
+.run-entry { border-bottom: 1px solid var(--hz-border); }
+.run-entry a {
+  display: flex; align-items: baseline; gap: .9rem; flex-wrap: wrap;
+  padding: .7rem .6rem;
+  font-family: var(--hz-mono);
+  font-size: .88rem;
+  color: var(--hz-text) !important;
+  text-decoration: none !important;
+  border-left: 2px solid transparent;
+  transition: background .12s ease, border-color .12s ease;
+}
+.run-entry a:hover {
+  background: var(--hz-surface);
+  border-left-color: var(--hz-accent);
+}
+.run-date { color: var(--hz-text); font-variant-numeric: tabular-nums; }
+.run-time { color: var(--hz-text-muted); font-variant-numeric: tabular-nums; }
+.run-meta { margin-left: auto; color: var(--hz-text-faint); font-size: .82rem; }
+.run-count { color: var(--hz-accent); font-weight: 600; }
+/* A quiet run is information too, but it shouldn't claim the signal colour. */
+.run-count.zero { color: var(--hz-text-faint); font-weight: 400; }
+.run-sep { opacity: .5; padding: 0 .15em; }
+.run-entry.empty { padding: .8rem .6rem; color: var(--hz-text-faint); }
+
+/* --- Pipeline strip --- */
+.pipeline {
+  font-family: var(--hz-mono);
+  font-size: .82rem;
+  color: var(--hz-text-muted);
+  background: var(--hz-surface);
+  border: 1px solid var(--hz-border);
+  border-radius: var(--hz-radius);
+  padding: .7rem .9rem;
+  overflow-x: auto;
+}
+.pipeline code { background: transparent !important; color: var(--hz-accent) !important; }
+
+.doc-links { list-style: none; padding: 0; font-size: .92rem; }
+.doc-links li { padding: .35em 0; color: var(--hz-text-muted); }
+.doc-links a { font-family: var(--hz-mono); }
+
+.lang-alt { margin-top: 2.5rem; }
+.lang-alt summary {
+  cursor: pointer; font-family: var(--hz-mono); font-size: .8rem;
+  color: var(--hz-text-faint);
+}
+
+/* --- Score badge: the one place colour means something --- */
 .score-badge {
   display: inline-block;
-  padding: 0.1em 0.5em;
+  padding: .12em .5em;
   border-radius: 3px;
-  font-family: monospace;
-  font-size: 0.75em;
+  font-family: var(--hz-mono);
+  font-size: .75em;
   font-weight: 700;
-  color: #fff;
-  margin-left: 0.4em;
+  margin-left: .4em;
   vertical-align: middle;
+  border: 1px solid transparent;
 }
+.score-badge[data-tier="high"] { background: var(--hz-accent); color: #1a1200; }
+.score-badge[data-tier="good"] { background: var(--hz-accent-dim); color: var(--hz-accent); border-color: var(--hz-accent); }
+.score-badge[data-tier="mid"]  { background: transparent; color: var(--hz-text-muted); border-color: var(--hz-border); }
+.score-badge[data-tier="low"]  { background: transparent; color: var(--hz-text-faint); border-color: var(--hz-border); }
 
-.score-badge[data-tier="high"] { background: #be185d; } /* rose — from SVG */
-.score-badge[data-tier="good"] { background: #e0652e; } /* sunrise orange */
-.score-badge[data-tier="mid"]  { background: #d4a017; } /* warm gold */
-.score-badge[data-tier="low"]  { background: #7c7891; } /* muted lavender */
-
-/* --- Tag Pills --- */
+/* --- Item metadata --- */
 .tag-line code {
   border-radius: 3px;
-  padding: 0.1em 0.5em;
-  font-size: 0.8em;
-  background: var(--hz-accent) !important;
-  color: #fff !important;
+  padding: .1em .5em;
+  font-size: .8em;
+  background: var(--hz-surface-2) !important;
+  color: var(--hz-text-muted) !important;
 }
-
-@media (prefers-color-scheme: dark) {
-  .tag-line code {
-    background: #342f4a !important;   /* indigo border */
-    color: #f0a848 !important;        /* dawn gold */
-  }
-}
-
-/* --- Source Line --- */
 .source-line {
-  font-size: 0.85em;
-  color: var(--hz-text-muted);
-  border-left: 2px solid var(--hz-accent);
-  padding-left: 0.6em;
+  font-family: var(--hz-mono);
+  font-size: .8em;
+  color: var(--hz-text-faint);
+  border-left: 2px solid var(--hz-border);
+  padding-left: .6em;
 }
 
-/* --- Collapsible References --- */
-.main-content details {
-  border: 1px solid var(--hz-border);
-  border-radius: 4px;
-  margin: 0.8em 0;
-}
-
-.main-content details summary {
-  cursor: pointer;
-  padding: 0.4em 0.8em;
-  font-weight: 600;
-  color: var(--hz-text-muted);
-}
-
-.main-content details > ul {
-  padding: 0.4em 0.8em 0.4em 2em;
-  margin: 0;
-}
-
-/* --- TOC Ordered List --- */
-.main-content > ol {
-  border: 1px solid var(--hz-border);
-  border-radius: 4px;
-  padding: 0.8em 0.8em 0.8em 2em;
-  background: var(--hz-surface);
-}
-
-.main-content > ol > li {
-  padding: 0.3em 0;
-}
-
-/* --- Summary Blockquote --- */
+/* --- Digest body: prose gets a reading face and a comfortable measure --- */
+.main-content > p,
+.main-content > ul li,
+.main-content details p { max-width: 68ch; }
 .main-content > blockquote:first-of-type {
-  border-left-color: var(--hz-accent);
+  border-left: 2px solid var(--hz-accent) !important;
+  background: var(--hz-surface);
+  border-radius: 0 var(--hz-radius) var(--hz-radius) 0;
+  padding: .7em 1em;
   color: var(--hz-text-muted);
+  font-family: var(--hz-mono);
+  font-size: .85em;
   font-style: normal;
 }
 
-/* --- Language Toggle (fixed top-right) --- */
-.lang-toggle {
-  position: fixed;
-  top: 12px;
-  right: 16px;
-  z-index: 1000;
-  display: flex;
-  gap: 0;
+.main-content details {
+  border: 1px solid var(--hz-border);
+  border-radius: var(--hz-radius);
+  margin: .8em 0;
+  background: var(--hz-surface);
 }
-
-.lang-toggle button {
-  padding: 0.3em 1em;
-  border: 1px solid rgba(255,255,255,0.4);
-  background: rgba(0,0,0,0.15);
-  color: #fff;
-  font-size: 0.8em;
+.main-content details summary {
   cursor: pointer;
-  backdrop-filter: blur(4px);
+  padding: .5em .8em;
+  font-family: var(--hz-mono);
+  font-size: .85em;
+  color: var(--hz-text-muted);
 }
+.main-content details > ul { padding: .4em .8em .4em 2em; margin: 0; }
 
-.lang-toggle button:first-child {
-  border-radius: 3px 0 0 3px;
+.main-content > ol {
+  border: 1px solid var(--hz-border);
+  border-radius: var(--hz-radius);
+  padding: .8em .8em .8em 2em;
+  background: var(--hz-surface);
 }
+.main-content > ol > li { padding: .3em 0; }
 
-.lang-toggle button:last-child {
-  border-radius: 0 3px 3px 0;
-  border-left: none;
+/* --- Run-health footer: a status strip, not body copy --- */
+.main-content h2#run-health {
+  font-size: .75rem !important;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--hz-text-faint) !important;
+  border-bottom: 1px solid var(--hz-border);
+  padding-bottom: .4em;
 }
-
-.lang-toggle button.active {
-  background: var(--hz-accent);
-  color: #fff;
-  border-color: var(--hz-accent);
+.main-content h2#run-health + ul {
+  list-style: none; padding: .6em .9em; margin: .6em 0 0;
+  background: var(--hz-surface);
+  border: 1px solid var(--hz-border);
+  border-radius: var(--hz-radius);
+  font-family: var(--hz-mono);
+  font-size: .78rem;
+  color: var(--hz-text-muted);
 }
+.main-content h2#run-health + ul li { padding: .15em 0; max-width: none; }
 
-.lang-section.hidden {
-  display: none;
+/* --- Language toggle (kept; restyled) --- */
+.lang-toggle { position: fixed; top: 12px; right: 16px; z-index: 1000; display: flex; }
+.lang-toggle button {
+  padding: .3em 1em;
+  border: 1px solid var(--hz-border);
+  background: var(--hz-surface);
+  color: var(--hz-text-muted);
+  font-family: var(--hz-mono);
+  font-size: .75em;
+  cursor: pointer;
+}
+.lang-toggle button:first-child { border-radius: var(--hz-radius) 0 0 var(--hz-radius); }
+.lang-toggle button:last-child { border-radius: 0 var(--hz-radius) var(--hz-radius) 0; border-left: none; }
+.lang-toggle button.active { background: var(--hz-accent); color: #1a1200; border-color: var(--hz-accent); }
+.lang-section.hidden { display: none; }
+
+@media (max-width: 640px) {
+  .run-entry a { gap: .5rem; font-size: .82rem; }
+  .run-meta { margin-left: 0; width: 100%; }
 }

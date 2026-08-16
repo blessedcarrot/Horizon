@@ -39,7 +39,12 @@ jobs:
           HORIZON_WEBHOOK_URL: ${{ secrets.HORIZON_WEBHOOK_URL }}
         run: |
           set -o pipefail
-          uv run horizon --hours 12 2>&1 | tee horizon-run.log
+          # 14h window on a 12h cadence: 2h of deliberate overlap. Windows that
+          # exactly abut the run interval leave a permanent gap — an item whose
+          # feed lags its own timestamp (CDN caching) misses the run it belongs
+          # to, and the next run's window starts after it. Seen with a Verge
+          # item on 2026-08-16. Overlap costs a few re-scored items.
+          uv run horizon --hours 14 2>&1 | tee horizon-run.log
 
       - name: "Run health check (BACKLOG #5/#6 - distinguish quiet from broken)"
         run: python scripts/check_run_health.py horizon-run.log --append-digest docs/_posts
