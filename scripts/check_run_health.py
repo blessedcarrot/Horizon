@@ -148,6 +148,29 @@ def build_report(per_source, totals, grouped, warnings) -> str:
     return "\n".join(lines) + "\n"
 
 
+def todays_posts(posts_dir: Path) -> list[Path]:
+    """This run's digest file(s) — the newest per language for today.
+
+    Posts are named "<date>-<HHMM>-summary-<lang>.md" (the run time was added
+    so a day's second run stops overwriting the first). Several files can
+    therefore share a date, and only the one this run just wrote should get
+    this run's health footer. The pre-timestamp "<date>-summary-<lang>.md"
+    form is still matched so older digests aren't missed.
+    """
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    newest_per_lang: dict[str, tuple[str, Path]] = {}
+    for post in posts_dir.glob(f"{today}-*summary-*.md"):
+        lang = post.stem.rsplit("summary-", 1)[-1]
+        # Rank by the HHMM in the name, not mtime: this run wrote the latest
+        # time for today, and filesystem timestamps can be reordered by
+        # anything that touches the files (checkout, copy, deploy tooling).
+        middle = post.stem[len(today) + 1:].rsplit("-summary-", 1)[0]
+        stamp = middle if middle.isdigit() else ""  # legacy name sorts first
+        if lang not in newest_per_lang or stamp > newest_per_lang[lang][0]:
+            newest_per_lang[lang] = (stamp, post)
+    return sorted(p for _, p in newest_per_lang.values())
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("logfile", type=Path)
@@ -167,8 +190,7 @@ def main() -> int:
             f.write(report)
 
     if args.append_digest and args.append_digest.is_dir():
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        for post in sorted(args.append_digest.glob(f"{today}-summary-*.md")):
+        for post in todays_posts(args.append_digest):
             # Digests already end with a horizontal rule; don't stack a second.
             existing = post.read_text(encoding="utf-8").rstrip()
             separator = "\n\n" if existing.endswith("---") else "\n\n---\n\n"

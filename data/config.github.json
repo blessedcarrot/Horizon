@@ -333,8 +333,12 @@
       "category": "oss-trending",
       "profile": "tech-news"
     },
+    "telegram": {
+      "enabled": false,
+      "channels": []
+    },
     "gdelt": {
-      "enabled": true,
+      "enabled": false,
       "query": "Anthropic OR OpenAI OR xAI OR Grok OR DeepSeek OR Qwen OR \"Mistral AI\" OR \"Meta AI\" OR \"Moonshot AI\" OR \"Google Gemini\"",
       "mode": "ArtList",
       "max_records": 75,

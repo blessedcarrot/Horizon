@@ -292,7 +292,13 @@ class HorizonOrchestrator:
             await self.enrich_items(important_items)
 
             # 7. Generate and save daily summaries for each configured language
-            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            now_utc = datetime.now(timezone.utc)
+            today = now_utc.strftime("%Y-%m-%d")
+            # Runs happen more than once a day, and the published post was named
+            # by date alone in "w" mode, so the day's second run overwrote the
+            # first — a quiet second run deleted items already published. Adding
+            # the run time gives each run its own post.
+            run_time = now_utc.strftime("%H%M")
             for lang in self.config.ai.languages:
                 summarizer = DailySummarizer(
                     profile_names=self.profiles.names,
@@ -310,7 +316,7 @@ class HorizonOrchestrator:
                 try:
                     from pathlib import Path
 
-                    post_filename = f"{today}-summary-{lang}.md"
+                    post_filename = f"{today}-{run_time}-summary-{lang}.md"
                     posts_dir = Path("docs/_posts")
                     posts_dir.mkdir(parents=True, exist_ok=True)
 
@@ -320,7 +326,8 @@ class HorizonOrchestrator:
                     front_matter = (
                         "---\n"
                         "layout: default\n"
-                        f"title: \"Horizon Summary: {today} ({lang.upper()})\"\n"
+                        f"title: \"Horizon Summary: {today} "
+                        f"{now_utc.strftime('%H:%M')} UTC ({lang.upper()})\"\n"
                         f"date: {today}\n"
                         f"lang: {lang}\n"
                         "---\n\n"
