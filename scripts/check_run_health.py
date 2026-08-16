@@ -10,6 +10,9 @@ Usage:
 
 Effects:
   - Prints a health report; also writes it to $GITHUB_STEP_SUMMARY when set.
+  - Emits GitHub workflow-command annotations (::error/::warning/::notice),
+    which surface in the Annotations box at the top of the run page — the
+    only surface visible without opening logs or the summary tab.
   - With --append-digest: appends a compact health footer to today's
     digest file(s) (docs/_posts/YYYY-MM-DD-summary-*.md).
   - Writes the error count to health_errors.txt so a later workflow step
@@ -23,6 +26,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+TIMESTAMP_RE = re.compile(r"^\[?\d{2}/\d{2}/\d{2}[^]]*\]?\s*")
+QUOTED_RE = re.compile(r"'[^']*'|\"[^\"]*\"")
+# GitHub renders ~10 annotations per level per step; group and cap below that.
+MAX_ANNOTATIONS = 8
 FOUND_RE = re.compile(r"Found (\d+) items? from (.+?)\s*$")
 FETCHED_RE = re.compile(r"Fetched (\d+) items? from all sources")
 ANALYZED_RE = re.compile(r"Analyzed (\d+) items? with AI")
@@ -53,13 +60,61 @@ def parse_log(path: Path):
     return per_source, totals, errors, warnings
 
 
-def build_report(per_source, totals, errors, warnings) -> str:
+def group_errors(errors: list[str]) -> list[tuple[str, int]]:
+    """Collapse per-item errors into distinct signatures with counts.
+
+    Analysis failures repeat once per item with only the item title varying,
+    so 74 raw lines are really one problem. Grouping keeps the annotation
+    list under GitHub's per-step cap and makes the real failure obvious.
+    """
+    groups: dict[str, int] = {}
+    for line in errors:
+        sig = TIMESTAMP_RE.sub("", line)
+        sig = QUOTED_RE.sub("'…'", sig)
+        sig = " ".join(sig.split())
+        groups[sig] = groups.get(sig, 0) + 1
+    return sorted(groups.items(), key=lambda kv: -kv[1])
+
+
+def annotate(level: str, message: str) -> None:
+    """Emit a workflow command; shows in the run page's Annotations box."""
+    clean = message.replace("\r", " ").replace("\n", " ").strip()
+    print(f"::{level}::{clean}")
+
+
+def emit_annotations(per_source, totals, grouped, warnings) -> None:
+    headline = (
+        f"Radar run: {totals['fetched']} fetched, {totals['analyzed']} analyzed, "
+        f"{totals['selected']} cleared threshold, "
+        f"{sum(c for _, c in grouped)} errors, {warnings} warnings"
+    )
+    annotate("notice", headline)
+
+    if zero := sorted(n for n, c in per_source.items() if c == 0):
+        annotate(
+            "warning",
+            f"Sources returning zero items: {', '.join(zero)} — quiet or dead? "
+            "Zero across several consecutive runs means dead.",
+        )
+
+    for sig, count in grouped[:MAX_ANNOTATIONS]:
+        annotate("error", f"{count}x {sig[:300]}")
+    if len(grouped) > MAX_ANNOTATIONS:
+        annotate(
+            "error",
+            f"{len(grouped) - MAX_ANNOTATIONS} further distinct error type(s) "
+            "not shown — see the run log.",
+        )
+
+
+def build_report(per_source, totals, grouped, warnings) -> str:
     zero_sources = sorted(n for n, c in per_source.items() if c == 0)
+    error_count = sum(c for _, c in grouped)
     lines = ["## Run health", ""]
     lines.append(
         f"- **Fetched:** {totals['fetched']} | **Analyzed:** {totals['analyzed']}"
         f" | **Cleared threshold:** {totals['selected']}"
-        f" | **Errors:** {len(errors)} | **Warnings:** {warnings}"
+        f" | **Errors:** {error_count} | **Warnings:** {warnings}"
     )
     if per_source:
         counts = ", ".join(f"{n}: {c}" for n, c in sorted(per_source.items()))
@@ -69,12 +124,12 @@ def build_report(per_source, totals, errors, warnings) -> str:
             f"- ⚠️ **Sources returning zero items:** {', '.join(zero_sources)}"
             " — quiet or dead? Zero across several consecutive runs means dead."
         )
-    if errors:
+    if grouped:
         lines.append(
-            f"- 🔴 **{len(errors)} ERROR line(s) in this run** — an empty digest"
-            " may mean failures, not low scores. First errors:"
+            f"- 🔴 **{error_count} ERROR line(s), {len(grouped)} distinct type(s)**"
+            " — an empty digest may mean failures, not low scores:"
         )
-        lines += [f"  - `{e}`" for e in errors[:5]]
+        lines += [f"  - **{count}x** `{sig[:300]}`" for sig, count in grouped]
     else:
         lines.append(
             "- ✅ **No errors** — if the digest is empty, items genuinely"
@@ -91,8 +146,10 @@ def main() -> int:
     args = ap.parse_args()
 
     per_source, totals, errors, warnings = parse_log(args.logfile)
-    report = build_report(per_source, totals, errors, warnings)
+    grouped = group_errors(errors)
+    report = build_report(per_source, totals, grouped, warnings)
     print(report)
+    emit_annotations(per_source, totals, grouped, warnings)
 
     import os
     if summary_path := os.environ.get("GITHUB_STEP_SUMMARY"):

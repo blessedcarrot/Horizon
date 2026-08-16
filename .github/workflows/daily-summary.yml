@@ -16,12 +16,14 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        # v7 is the highest floating major tag astral-sh publishes; v10 exists
+        # only as pinned releases. v7 is node24, which clears the deprecation.
+        uses: astral-sh/setup-uv@v7
         with:
           version: "0.11.26"
 
