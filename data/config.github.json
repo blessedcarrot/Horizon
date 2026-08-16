@@ -328,7 +328,7 @@
         "diffusion",
         "transformer"
       ],
-      "min_stars": 10,
+      "min_stars": 3,
       "max_items": 30,
       "category": "oss-trending",
       "profile": "tech-news"
