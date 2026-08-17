@@ -2,14 +2,14 @@
 layout: default
 title: Subscribe
 permalink: /subscribe/
-description: Get the AI developments that clear the bar, twice a day or once a week.
+description: The few AI developments each day that would change a decision — with the reasoning attached.
 ---
 
 <div class="sub-hero" markdown="1">
 
 # Follow the radar
 
-Several hundred items come in each day from research feeds, vendor announcements, developer communities and trending repositories. A handful clear the bar. You get those, with the background research attached and the reasoning visible.
+Several hundred items arrive each day from research feeds, vendor announcements, developer communities and trending repositories. A handful would actually change a decision. You get those — with the background research attached, and a clear account of what each one changes and for whom.
 
 </div>
 
@@ -31,7 +31,7 @@ Curated by **Bruno Coelho** — technology leader working across Europe, Asia-Pa
 
   <div class="sub-option">
     <p class="sub-option-name">LinkedIn</p>
-    <p class="sub-option-desc">A weekly edition of what actually mattered, written up rather than listed — for people who would rather read one considered post than scan two digests a day.</p>
+    <p class="sub-option-desc">Periodic write-ups of what actually mattered, and the decisions it forces — for people who would rather read one considered piece than scan a feed.</p>
     <a class="sub-cta" href="https://www.linkedin.com/in/bracoelho/">Follow on LinkedIn</a>
   </div>
 
@@ -40,9 +40,9 @@ Curated by **Bruno Coelho** — technology leader working across Europe, Asia-Pa
 <h2 class="section-label">What you are signing up for</h2>
 
 <ul class="sub-facts">
-  <li><span class="k">Cadence</span><span class="v">Twice daily on the site, weekly on LinkedIn</span></li>
+  <li><span class="k">Cadence</span><span class="v">Daily</span></li>
   <li><span class="k">Volume</span><span class="v">Typically a handful of items per edition, out of several hundred read</span></li>
-  <li><span class="k">Themes</span><span class="v">Business &amp; Markets · Practice · Horizon · Guardrails</span></li>
+  <li><span class="k">Themes</span><span class="v">Energy &amp; Infrastructure · Business &amp; Markets · Practice · Horizon · Guardrails</span></li>
   <li><span class="k">Selection</span><span class="v">Every item scored 0–10; each theme has its own bar</span></li>
   <li><span class="k">Cost</span><span class="v">Free, and there is nothing to sell you</span></li>
 </ul>

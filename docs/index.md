@@ -5,13 +5,13 @@ title: Home
 
 <div class="radar-intro" markdown="1">
 
-**Early warning on AI and agentic AI, for people who have to make decisions about it.** Twice a day this reads research feeds, vendor announcements, developer communities and trending repositories, scores everything 0–10 for significance, and publishes only what clears the bar — with background research attached. Most days that means a handful of items out of several hundred.
+**Early warning on AI, for the people who have to decide what to do about it.** Each day this reads research feeds, vendor announcements, developer communities and trending repositories — several hundred items — and publishes the few that would change a decision. Each one carries the reasoning, not just the news: what it changes, for whom, and what would have to be true for it to matter.
 
 </div>
 
 <div class="byline" markdown="1">
 
-Curated by **Bruno Coelho** — technology leader working across Europe, Asia-Pacific and the Middle East. The bar is set for engineering substance over press-release framing: what changes an architecture decision, a build-versus-buy call, or a risk assessment.
+Curated by **Bruno Coelho** — technology leadership across Europe, Asia-Pacific and the Middle East, from strategy through execution. The bar is judgement, not novelty: an item earns a place here when it would change an architecture, an investment case, or a risk position.
 
 </div>
 
