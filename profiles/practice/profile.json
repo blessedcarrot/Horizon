@@ -22,7 +22,8 @@
       {
         "id": "what_this_changes",
         "type": "section",
-        "tools": []
+        "tools": [],
+        "optional": true
       },
       {
         "id": "caveats",
