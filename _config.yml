@@ -1,8 +1,8 @@
 theme: jekyll-theme-cayman
 title: NEWS-Radar
 description: "Early warning on AI and agentic AI — curated by Bruno Coelho"
-baseurl: "/Horizon" # the subpath of your site, e.g. /blog
-url: "https://blessedcarrot.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "" # served at the domain root, not a /Horizon subpath
+url: "https://radar.bcoelho.com" # custom domain; see docs/CNAME
 
 # Build settings
 markdown: kramdown
