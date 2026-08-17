@@ -14,15 +14,23 @@
   },
   "processing": {
     "profiles_dir": "profiles",
-    "default_profile": "tech-news",
+    "default_profile": "practice",
     "profile_settings": {
-      "tech-news": {
+      "business-markets": {
+        "threshold": 7.0,
+        "topic_dedup": true
+      },
+      "practice": {
         "threshold": 6.5,
         "topic_dedup": true
       },
-      "tech-blog": {
-        "threshold": 5.0,
-        "topic_dedup": false
+      "horizon-research": {
+        "threshold": 8.0,
+        "topic_dedup": true
+      },
+      "guardrails": {
+        "threshold": 7.0,
+        "topic_dedup": true
       }
     }
   },
@@ -48,7 +56,10 @@
         "repo": "claude-code",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-news"
+        "profile": [
+          "practice",
+          "business-markets"
+        ]
       },
       {
         "type": "repo_releases",
@@ -56,7 +67,10 @@
         "repo": "skills",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-news"
+        "profile": [
+          "practice",
+          "business-markets"
+        ]
       },
       {
         "type": "repo_releases",
@@ -64,7 +78,10 @@
         "repo": "codex",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-news"
+        "profile": [
+          "practice",
+          "business-markets"
+        ]
       },
       {
         "type": "repo_releases",
@@ -72,7 +89,10 @@
         "repo": "gemini-cli",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-news"
+        "profile": [
+          "practice",
+          "business-markets"
+        ]
       },
       {
         "type": "repo_releases",
@@ -80,7 +100,10 @@
         "repo": "copilot-cli",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-news"
+        "profile": [
+          "practice",
+          "business-markets"
+        ]
       },
       {
         "type": "repo_releases",
@@ -88,7 +111,10 @@
         "repo": "qwen-code",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-news"
+        "profile": [
+          "practice",
+          "business-markets"
+        ]
       },
       {
         "type": "repo_releases",
@@ -96,7 +122,10 @@
         "repo": "langchain",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-news"
+        "profile": [
+          "practice",
+          "business-markets"
+        ]
       },
       {
         "type": "repo_releases",
@@ -104,7 +133,10 @@
         "repo": "vllm",
         "enabled": true,
         "category": "llm-inference",
-        "profile": "tech-news"
+        "profile": [
+          "practice",
+          "business-markets"
+        ]
       },
       {
         "type": "repo_releases",
@@ -112,7 +144,10 @@
         "repo": "ollama",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-news"
+        "profile": [
+          "practice",
+          "business-markets"
+        ]
       },
       {
         "type": "repo_releases",
@@ -120,7 +155,10 @@
         "repo": "transformers",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-news"
+        "profile": [
+          "practice",
+          "business-markets"
+        ]
       }
     ],
     "hackernews": {
@@ -128,7 +166,12 @@
       "fetch_top_stories": 30,
       "min_score": 40,
       "category": "tech",
-      "profile": "tech-news"
+      "profile": [
+        "business-markets",
+        "practice",
+        "horizon-research",
+        "guardrails"
+      ]
     },
     "rss": [
       {
@@ -136,28 +179,43 @@
         "url": "https://rss.arxiv.org/rss/cs.AI",
         "enabled": true,
         "category": "research",
-        "profile": "tech-news"
+        "profile": [
+          "horizon-research",
+          "practice",
+          "guardrails"
+        ]
       },
       {
         "name": "arXiv cs.CL",
         "url": "https://rss.arxiv.org/rss/cs.CL",
         "enabled": true,
         "category": "research",
-        "profile": "tech-news"
+        "profile": [
+          "horizon-research",
+          "practice",
+          "guardrails"
+        ]
       },
       {
         "name": "arXiv cs.LG",
         "url": "https://rss.arxiv.org/rss/cs.LG",
         "enabled": true,
         "category": "research",
-        "profile": "tech-news"
+        "profile": [
+          "horizon-research",
+          "practice",
+          "guardrails"
+        ]
       },
       {
         "name": "Hugging Face Blog",
         "url": "https://huggingface.co/blog/feed.xml",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-blog",
+        "profile": [
+          "practice",
+          "horizon-research"
+        ],
         "content_extractor": "trafilatura"
       },
       {
@@ -165,21 +223,33 @@
         "url": "https://deepmind.google/blog/rss.xml",
         "enabled": true,
         "category": "research-labs",
-        "profile": "tech-news"
+        "profile": [
+          "horizon-research",
+          "business-markets",
+          "guardrails"
+        ]
       },
       {
         "name": "MIT Technology Review - AI",
         "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
         "enabled": true,
         "category": "media",
-        "profile": "tech-news"
+        "profile": [
+          "business-markets",
+          "practice",
+          "horizon-research",
+          "guardrails"
+        ]
       },
       {
         "name": "Simon Willison",
         "url": "https://simonwillison.net/atom/everything/",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-blog",
+        "profile": [
+          "practice",
+          "horizon-research"
+        ],
         "content_extractor": "trafilatura"
       },
       {
@@ -187,63 +257,105 @@
         "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
         "enabled": true,
         "category": "media",
-        "profile": "tech-news"
+        "profile": [
+          "business-markets",
+          "practice",
+          "horizon-research",
+          "guardrails"
+        ]
       },
       {
         "name": "OpenAI News",
         "url": "https://openai.com/news/rss.xml",
         "enabled": true,
         "category": "research-labs",
-        "profile": "tech-news"
+        "profile": [
+          "business-markets",
+          "practice",
+          "horizon-research",
+          "guardrails"
+        ]
       },
       {
         "name": "Anthropic News (RSSHub mirror)",
         "url": "https://rsshub.bestblogs.dev/anthropic/news",
         "enabled": true,
         "category": "research-labs",
-        "profile": "tech-news"
+        "profile": [
+          "business-markets",
+          "practice",
+          "horizon-research",
+          "guardrails"
+        ]
       },
       {
         "name": "Google AI Blog",
         "url": "https://blog.google/technology/ai/rss/",
         "enabled": true,
         "category": "research-labs",
-        "profile": "tech-news"
+        "profile": [
+          "business-markets",
+          "practice",
+          "horizon-research",
+          "guardrails"
+        ]
       },
       {
         "name": "Google Developers Blog",
         "url": "https://developers.googleblog.com/feeds/posts/default",
         "enabled": true,
         "category": "research-labs",
-        "profile": "tech-news"
+        "profile": [
+          "business-markets",
+          "practice",
+          "horizon-research",
+          "guardrails"
+        ]
       },
       {
         "name": "DeepSeek News (RSSHub mirror)",
         "url": "https://rsshub.bestblogs.dev/deepseek/news",
         "enabled": true,
         "category": "research-labs",
-        "profile": "tech-news"
+        "profile": [
+          "business-markets",
+          "practice",
+          "horizon-research",
+          "guardrails"
+        ]
       },
       {
         "name": "Qwen Blog (DEAD - abandoned Sep 2025, no successor feed found)",
         "url": "https://qwenlm.github.io/blog/index.xml",
         "enabled": false,
         "category": "research-labs",
-        "profile": "tech-news"
+        "profile": [
+          "business-markets",
+          "practice",
+          "horizon-research",
+          "guardrails"
+        ]
       },
       {
         "name": "Cursor Changelog",
         "url": "https://cursor.com/changelog/rss.xml",
         "enabled": true,
         "category": "ai-tools",
-        "profile": "tech-news"
+        "profile": [
+          "practice"
+        ]
       },
       {
         "name": "smol.ai AINews",
         "url": "https://news.smol.ai/rss.xml",
         "enabled": true,
         "category": "newsletters",
-        "profile": "tech-news",
+        "profile": [
+          "business-markets",
+          "practice",
+          "horizon-research",
+          "guardrails"
+        ],
         "content_extractor": "trafilatura"
       },
       {
@@ -251,7 +363,12 @@
         "url": "https://tldr.tech/api/rss/ai",
         "enabled": true,
         "category": "newsletters",
-        "profile": "tech-news",
+        "profile": [
+          "business-markets",
+          "practice",
+          "horizon-research",
+          "guardrails"
+        ],
         "content_extractor": "trafilatura"
       }
     ],
@@ -267,7 +384,12 @@
           "fetch_limit": 15,
           "min_score": 50,
           "category": "ai-ml",
-          "profile": "tech-news"
+          "profile": [
+            "business-markets",
+            "practice",
+            "horizon-research",
+            "guardrails"
+          ]
         },
         {
           "subreddit": "LocalLLaMA",
@@ -277,7 +399,12 @@
           "fetch_limit": 15,
           "min_score": 30,
           "category": "ai-ml",
-          "profile": "tech-news"
+          "profile": [
+            "business-markets",
+            "practice",
+            "horizon-research",
+            "guardrails"
+          ]
         },
         {
           "subreddit": "artificial",
@@ -287,7 +414,12 @@
           "fetch_limit": 10,
           "min_score": 30,
           "category": "ai-ml",
-          "profile": "tech-news"
+          "profile": [
+            "business-markets",
+            "practice",
+            "horizon-research",
+            "guardrails"
+          ]
         }
       ],
       "users": []
@@ -309,7 +441,12 @@
       "max_replies_per_tweet": 3,
       "max_tweets_to_expand": 10,
       "reply_min_likes": 5,
-      "profile": "tech-news"
+      "profile": [
+        "business-markets",
+        "practice",
+        "horizon-research",
+        "guardrails"
+      ]
     },
     "ossinsight": {
       "enabled": true,
@@ -331,7 +468,10 @@
       "min_stars": 3,
       "max_items": 30,
       "category": "oss-trending",
-      "profile": "tech-news"
+      "profile": [
+        "practice",
+        "horizon-research"
+      ]
     },
     "telegram": {
       "enabled": false,
@@ -343,7 +483,11 @@
       "mode": "ArtList",
       "max_records": 75,
       "category": "vendor-watch",
-      "profile": "tech-news"
+      "profile": [
+        "business-markets",
+        "guardrails",
+        "practice"
+      ]
     },
     "google_news": {
       "enabled": true,
@@ -352,17 +496,23 @@
       "country": "US",
       "max_results": 50,
       "category": "vendor-watch",
-      "profile": "tech-news"
+      "profile": [
+        "business-markets",
+        "guardrails",
+        "practice"
+      ]
     }
   },
   "collection": {
     "time_window_hours": 12
   },
   "digest": {
-    "max_items": null,
+    "max_items": 24,
     "profile_order": [
-      "tech-news",
-      "tech-blog"
+      "business-markets",
+      "practice",
+      "horizon-research",
+      "guardrails"
     ],
     "category_groups": {},
     "default_group": "other",

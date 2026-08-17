@@ -1,0 +1,37 @@
+{
+  "id": "business-markets",
+  "name": "Business & Markets",
+  "match": "match.md",
+  "analysis": "analysis.md",
+  "enrichment": {
+    "prompt": "enrichment.md",
+    "blocks": [
+      {
+        "id": "summary",
+        "type": "section",
+        "tools": [],
+        "primary": true
+      },
+      {
+        "id": "background",
+        "type": "section",
+        "tools": [
+          "web_search"
+        ]
+      },
+      {
+        "id": "commercial_consequence",
+        "type": "section",
+        "tools": [
+          "web_search"
+        ]
+      },
+      {
+        "id": "community_discussion",
+        "type": "section",
+        "tools": [],
+        "optional": true
+      }
+    ]
+  }
+}

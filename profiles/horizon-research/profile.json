@@ -1,0 +1,37 @@
+{
+  "id": "horizon-research",
+  "name": "Horizon",
+  "match": "match.md",
+  "analysis": "analysis.md",
+  "enrichment": {
+    "prompt": "enrichment.md",
+    "blocks": [
+      {
+        "id": "summary",
+        "type": "section",
+        "tools": [],
+        "primary": true
+      },
+      {
+        "id": "background",
+        "type": "section",
+        "tools": [
+          "web_search"
+        ]
+      },
+      {
+        "id": "what_would_have_to_be_true",
+        "type": "section",
+        "tools": [
+          "web_search"
+        ]
+      },
+      {
+        "id": "maturity",
+        "type": "section",
+        "tools": [],
+        "optional": true
+      }
+    ]
+  }
+}

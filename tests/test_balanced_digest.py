@@ -199,12 +199,14 @@ def test_appends_profiles_missing_from_configured_order() -> None:
 
     HorizonOrchestrator(config, SimpleNamespace())
 
-    assert config.digest.profile_order == [
-        "tech-news",
-        "tech-blog",
-        "ai-creator",
-        "finance-news",
-    ]
+    # Asserted as a property rather than a fixed list: this repository defines
+    # its own profiles alongside the built-ins, so hardcoding the full set makes
+    # the test fail whenever a profile is added, which is not what it checks.
+    order = config.digest.profile_order
+    assert order[:2] == ["tech-news", "tech-blog"]
+    for built_in in ("ai-creator", "finance-news"):
+        assert built_in in order[2:]
+    assert len(order) == len(set(order))
 
 
 def test_rejects_unknown_profile_order() -> None:
