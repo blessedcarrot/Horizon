@@ -15,9 +15,19 @@ exclude:
   - ".github"
   - "node_modules"
 
+collections:
+  commentary:
+    output: true
+    permalink: /commentary/:name/
+
 defaults:
   - scope:
       path: ""
       type: "posts"
     values:
       layout: "default"
+  - scope:
+      path: ""
+      type: "commentary"
+    values:
+      layout: "commentary"
