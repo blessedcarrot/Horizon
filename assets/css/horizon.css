@@ -512,3 +512,11 @@ pre {
   font-size: .8rem;
   color: var(--hz-text-faint);
 }
+
+/* Sign-off carries standing, not a sales pitch: the audience is senior, and
+   understatement reads better to them than a call to action. */
+.commentary-author { margin: 0 0 .35rem; color: var(--hz-text-muted); font-family: var(--hz-sans); }
+.commentary-author strong { color: var(--hz-text); }
+.commentary-stance { margin: 0 0 .7rem; color: var(--hz-text-faint); font-style: italic; }
+.commentary-links { margin: 0; display: flex; gap: .6rem; flex-wrap: wrap; }
+.commentary-links span { opacity: .4; }
