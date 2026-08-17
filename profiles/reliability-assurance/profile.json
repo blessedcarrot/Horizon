@@ -1,6 +1,6 @@
 {
-  "id": "energy-infrastructure",
-  "name": "Energy & Infrastructure",
+  "id": "reliability-assurance",
+  "name": "Reliability & Assurance",
   "match": "match.md",
   "analysis": "analysis.md",
   "enrichment": {
@@ -20,7 +20,7 @@
         ]
       },
       {
-        "id": "operator_implication",
+        "id": "exposure",
         "type": "section",
         "tools": [
           "web_search"
@@ -28,7 +28,7 @@
         "optional": true
       },
       {
-        "id": "constraints",
+        "id": "mitigation",
         "type": "section",
         "tools": [],
         "optional": true

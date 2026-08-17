@@ -1,6 +1,6 @@
 {
-  "id": "guardrails",
-  "name": "Guardrails",
+  "id": "critical-infrastructure",
+  "name": "Critical Infrastructure",
   "match": "match.md",
   "analysis": "analysis.md",
   "enrichment": {
@@ -20,7 +20,7 @@
         ]
       },
       {
-        "id": "exposure",
+        "id": "operator_implication",
         "type": "section",
         "tools": [
           "web_search"
@@ -28,7 +28,7 @@
         "optional": true
       },
       {
-        "id": "mitigation",
+        "id": "constraints",
         "type": "section",
         "tools": [],
         "optional": true

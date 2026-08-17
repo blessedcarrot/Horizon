@@ -520,3 +520,5 @@ pre {
 .commentary-stance { margin: 0 0 .7rem; color: var(--hz-text-faint); font-style: italic; }
 .commentary-links { margin: 0; display: flex; gap: .6rem; flex-wrap: wrap; }
 .commentary-links span { opacity: .4; }
+
+.method-note { color: var(--hz-text-muted); font-size: .93rem; max-width: 68ch; margin: .6rem 0 1.2rem; }

@@ -28,12 +28,12 @@
         "threshold": 8.0,
         "topic_dedup": true
       },
-      "guardrails": {
-        "threshold": 7.0,
+      "critical-infrastructure": {
+        "threshold": 6.5,
         "topic_dedup": true
       },
-      "energy-infrastructure": {
-        "threshold": 6.5,
+      "reliability-assurance": {
+        "threshold": 7.0,
         "topic_dedup": true
       }
     }
@@ -174,8 +174,8 @@
         "business-markets",
         "practice",
         "horizon-research",
-        "guardrails",
-        "energy-infrastructure"
+        "reliability-assurance",
+        "critical-infrastructure"
       ]
     },
     "rss": [
@@ -187,7 +187,7 @@
         "profile": [
           "horizon-research",
           "practice",
-          "guardrails"
+          "reliability-assurance"
         ]
       },
       {
@@ -198,7 +198,7 @@
         "profile": [
           "horizon-research",
           "practice",
-          "guardrails"
+          "reliability-assurance"
         ]
       },
       {
@@ -209,7 +209,7 @@
         "profile": [
           "horizon-research",
           "practice",
-          "guardrails"
+          "reliability-assurance"
         ]
       },
       {
@@ -231,8 +231,8 @@
         "profile": [
           "horizon-research",
           "business-markets",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ]
       },
       {
@@ -244,8 +244,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ]
       },
       {
@@ -268,8 +268,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ]
       },
       {
@@ -281,8 +281,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ]
       },
       {
@@ -294,8 +294,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ]
       },
       {
@@ -307,8 +307,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ]
       },
       {
@@ -320,8 +320,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ]
       },
       {
@@ -333,8 +333,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ]
       },
       {
@@ -346,8 +346,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ]
       },
       {
@@ -368,8 +368,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ],
         "content_extractor": "trafilatura"
       },
@@ -382,8 +382,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails",
-          "energy-infrastructure"
+          "reliability-assurance",
+          "critical-infrastructure"
         ],
         "content_extractor": "trafilatura"
       },
@@ -393,7 +393,7 @@
         "enabled": true,
         "category": "energy-infra",
         "profile": [
-          "energy-infrastructure",
+          "critical-infrastructure",
           "business-markets",
           "practice"
         ]
@@ -404,9 +404,9 @@
         "enabled": true,
         "category": "energy-infra",
         "profile": [
-          "energy-infrastructure",
+          "critical-infrastructure",
           "business-markets",
-          "guardrails"
+          "reliability-assurance"
         ]
       },
       {
@@ -415,9 +415,43 @@
         "enabled": true,
         "category": "energy-infra",
         "profile": [
-          "energy-infrastructure",
+          "critical-infrastructure",
           "business-markets",
-          "guardrails"
+          "reliability-assurance"
+        ]
+      },
+      {
+        "name": "NIST News",
+        "url": "https://www.nist.gov/news-events/news/rss.xml",
+        "enabled": true,
+        "category": "standards",
+        "profile": [
+          "reliability-assurance",
+          "critical-infrastructure",
+          "business-markets"
+        ]
+      },
+      {
+        "name": "IEEE Spectrum — AI",
+        "url": "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
+        "enabled": true,
+        "category": "media",
+        "profile": [
+          "reliability-assurance",
+          "critical-infrastructure",
+          "practice",
+          "horizon-research"
+        ]
+      },
+      {
+        "name": "arXiv cs.SE",
+        "url": "https://rss.arxiv.org/rss/cs.SE",
+        "enabled": true,
+        "category": "research",
+        "profile": [
+          "reliability-assurance",
+          "practice",
+          "horizon-research"
         ]
       }
     ],
@@ -437,7 +471,7 @@
             "business-markets",
             "practice",
             "horizon-research",
-            "guardrails"
+            "reliability-assurance"
           ]
         },
         {
@@ -452,7 +486,7 @@
             "business-markets",
             "practice",
             "horizon-research",
-            "guardrails"
+            "reliability-assurance"
           ]
         },
         {
@@ -467,7 +501,7 @@
             "business-markets",
             "practice",
             "horizon-research",
-            "guardrails"
+            "reliability-assurance"
           ]
         }
       ],
@@ -494,7 +528,7 @@
         "business-markets",
         "practice",
         "horizon-research",
-        "guardrails"
+        "reliability-assurance"
       ]
     },
     "ossinsight": {
@@ -534,7 +568,7 @@
       "category": "vendor-watch",
       "profile": [
         "business-markets",
-        "guardrails",
+        "reliability-assurance",
         "practice"
       ]
     },
@@ -547,9 +581,9 @@
       "category": "vendor-watch",
       "profile": [
         "business-markets",
-        "guardrails",
+        "reliability-assurance",
         "practice",
-        "energy-infrastructure"
+        "critical-infrastructure"
       ]
     }
   },
@@ -559,11 +593,11 @@
   "digest": {
     "max_items": 24,
     "profile_order": [
-      "energy-infrastructure",
+      "critical-infrastructure",
+      "reliability-assurance",
       "business-markets",
       "practice",
-      "horizon-research",
-      "guardrails"
+      "horizon-research"
     ],
     "category_groups": {},
     "default_group": "other",
