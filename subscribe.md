@@ -15,7 +15,7 @@ Several hundred items come in each day from research feeds, vendor announcements
 
 <div class="byline" markdown="1">
 
-Curated by **Bruno Coelho** — Head of AI Engineering, APAC & Middle East at Capgemini. The bar is set for engineering substance over press-release framing: what changes an architecture decision, a build-versus-buy call, or a risk assessment.
+Curated by **Bruno Coelho** — technology leader working across Europe, Asia-Pacific and the Middle East. The bar is set for engineering substance over press-release framing: what changes an architecture decision, a build-versus-buy call, or a risk assessment.
 
 </div>
 
