@@ -1,0 +1,30 @@
+---
+layout: default
+---
+<article class="commentary">
+
+  <p class="commentary-kicker">Commentary</p>
+  <h1 class="commentary-title">{{ page.title }}</h1>
+
+  <p class="commentary-meta">
+    <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%d %B %Y" }}</time>
+    {% if page.theme %}<span aria-hidden="true">·</span> <span class="commentary-theme">{{ page.theme }}</span>{% endif %}
+  </p>
+
+  {% if page.item_url %}
+  <p class="commentary-on">
+    On: <a href="{{ page.item_url }}">{{ page.item_title | default: page.item_url }}</a>{% if page.item_score %} <span class="score-badge" data-tier="high">{{ page.item_score }}</span>{% endif %}
+    {% if page.edition_url %}<br><span class="commentary-edition">Surfaced in the <a href="{{ page.edition_url | relative_url }}">edition of {{ page.edition_date | default: page.date | date: "%d %B" }}</a></span>{% endif %}
+  </p>
+  {% endif %}
+
+  <div class="commentary-body">
+    {{ content }}
+  </div>
+
+  <p class="commentary-sign">
+    — Bruno Coelho. The radar surfaces items; the reading is mine.
+    <a href="{{ '/subscribe/' | relative_url }}">Follow the radar</a>.
+  </p>
+
+</article>

@@ -22,6 +22,24 @@ Subscribe
 
 </div>
 
+<h2 class="section-label">Commentary</h2>
+
+{% assign takes = site.commentary | where_exp: "c", "c.title" | sort: "date" | reverse %}
+{% if takes.size > 0 %}
+<ul class="take-list">
+  {% for take in takes limit:4 %}
+    <li class="take">
+      <a href="{{ take.url | relative_url }}">
+        <span class="take-title">{{ take.title }}</span>
+        <span class="take-meta">{{ take.date | date: "%d %b" }}{% if take.theme %} · {{ take.theme }}{% endif %}</span>
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="take-empty">Nothing written yet. The radar surfaces items; the reading gets added here.</p>
+{% endif %}
+
 <h2 class="section-label">Run log</h2>
 
 <ul class="run-log">

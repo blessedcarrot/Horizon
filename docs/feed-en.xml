@@ -9,6 +9,16 @@ permalink: /feed-en.xml
   <link href="{{ '/' | absolute_url }}"/>
   <updated>{{ site.time | date_to_xmlschema }}</updated>
   <id>{{ '/' | absolute_url }}</id>
+  {% assign takes = site.commentary | where_exp: "c", "c.title" | sort: "date" | reverse %}
+  {% for take in takes limit:5 %}
+  <entry>
+    <title>Commentary: {{ take.title | escape }}</title>
+    <link href="{{ take.url | absolute_url }}"/>
+    <updated>{{ take.date | date_to_xmlschema }}</updated>
+    <id>{{ take.url | absolute_url }}</id>
+    <content type="html"><![CDATA[ {{ take.content }} ]]></content>
+  </entry>
+  {% endfor %}
   {% assign en_posts = site.posts | where: "lang", "en" %}
   {% for post in en_posts limit:7 %}
   <entry>
