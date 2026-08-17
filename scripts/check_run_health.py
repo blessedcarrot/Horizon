@@ -119,7 +119,7 @@ def emit_annotations(per_source, per_feed, totals, grouped, warnings) -> None:
     if zero := sorted(n for n, c in per_source.items() if c == 0):
         annotate(
             "warning",
-            f"Sources returning zero items: {', '.join(zero)} — quiet or dead? "
+            f"Sources returning zero items: {', '.join(zero)}. "
             "Zero across several consecutive runs means dead.",
         )
 
@@ -135,7 +135,7 @@ def emit_annotations(per_source, per_feed, totals, grouped, warnings) -> None:
         annotate(
             "error",
             f"{len(grouped) - MAX_ANNOTATIONS} further distinct error type(s) "
-            "not shown — see the run log.",
+            "not shown. See the run log.",
         )
 
 
@@ -154,7 +154,7 @@ def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
     if zero_sources:
         lines.append(
             f"- ⚠️ **Sources returning zero items:** {', '.join(zero_sources)}"
-            " — quiet or dead? Zero across several consecutive runs means dead."
+            ". Zero across several consecutive runs means dead."
         )
     if per_feed:
         failed = sorted(n for n, (_, f) in per_feed.items() if f)
@@ -172,13 +172,13 @@ def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
     if grouped:
         lines.append(
             f"- 🔴 **{error_count} ERROR line(s), {len(grouped)} distinct type(s)**"
-            " — an empty digest may mean failures, not low scores:"
+            ". The digest may be incomplete:"
         )
         lines += [f"  - **{count}x** `{sig[:300]}`" for sig, count in grouped]
     else:
         lines.append(
-            "- ✅ **No errors** — if the digest is empty, items genuinely"
-            " scored below threshold."
+            "- ✅ **No errors**. An empty digest means items scored"
+            " below threshold."
         )
     return "\n".join(lines) + "\n"
 

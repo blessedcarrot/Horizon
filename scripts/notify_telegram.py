@@ -97,8 +97,8 @@ def build_message(health: dict, run_type: str) -> str:
 
     nothing_cleared = stats.get("selected") == 0 and not health.get("incomplete")
     if health.get("incomplete"):
-        lines.append("🔴 <b>The run failed before the health check ran</b> — "
-                     "no digest was produced.")
+        lines.append("🔴 <b>The run failed before the health check ran.</b> "
+                     "No digest was produced.")
         errors = 0  # don't also print the generic error block below
     elif nothing_cleared:
         lines.append(f'Nothing met the threshold · {stats.get("analyzed")} analyzed')
@@ -118,8 +118,8 @@ def build_message(health: dict, run_type: str) -> str:
         )
         if server and repo and run_id:
             run_link = f'\n<a href="{server}/{repo}/actions/runs/{run_id}">View the failing run</a>'
-        lines.insert(2, f"🔴 <b>{errors} error(s) during this run</b> — "
-                        f"the digest may be incomplete.{run_link}\n")
+        lines.insert(2, f"🔴 <b>{errors} error(s) during this run.</b> "
+                        f"The digest may be incomplete.{run_link}\n")
 
     if zero := health.get("zero_sources"):
         lines.append(f"⚠️ No items from: {esc(', '.join(zero))}\n")
@@ -133,7 +133,7 @@ def build_message(health: dict, run_type: str) -> str:
         for item in items[:MAX_ITEMS_SHOWN]:
             host = urllib.parse.urlparse(item["url"]).netloc.removeprefix("www.")
             lines.append(
-                f'⭐ <b>{esc(item["score"])}</b> — '
+                f'⭐ <b>{esc(item["score"])}</b> '
                 f'<a href="{esc(item["url"])}">{esc(item["title"])}</a>'
                 f"\n<i>{esc(host)}</i>"
             )
@@ -182,9 +182,9 @@ def main() -> int:
         if args.self_test:
             # Silence is the correct behavior for a normal run without
             # secrets, but for a self-test it is the failure being tested.
-            print("Telegram secrets are not set — nothing to test.")
+            print("Telegram secrets are not set. Nothing to test.")
             return 1
-        print("Telegram secrets not set — skipping notification.")
+        print("Telegram secrets not set. Skipping notification.")
         return 0
 
     run_type = RUN_TYPES.get(
@@ -225,7 +225,7 @@ def main() -> int:
 
     quiet = not health.get("errors") and not health.get("totals", {}).get("selected")
     if quiet and not args.always:
-        print("Nothing cleared threshold and no errors — staying silent.")
+        print("Nothing cleared threshold and no errors. Staying silent.")
         return 0
 
     message = build_message(health, run_type)

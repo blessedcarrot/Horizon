@@ -5,13 +5,13 @@ title: Home
 
 <div class="radar-intro" markdown="1">
 
-**Early warning on AI, for the people who have to decide what to do about it.** Each day this reads research feeds, vendor announcements, developer communities and trending repositories — several hundred items — and publishes the few that would change a decision. Each one carries the reasoning, not just the news: what it changes, for whom, and what would have to be true for it to matter.
+**Early warning on AI, for the people who have to decide what to do about it.** Each day this reads several hundred items from research feeds, vendor announcements, developer communities and trending repositories, then publishes the few that would change a decision. Each one carries the reasoning behind it: what it changes, for whom, and what would have to be true for it to matter.
 
 </div>
 
 <div class="byline" markdown="1">
 
-Curated by **Bruno Coelho** — technology leadership across Europe, Asia-Pacific and the Middle East, from strategy through execution. The bar is judgement, not novelty: an item earns a place here when it would change an architecture, an investment case, or a risk position.
+Curated by **Bruno Coelho**, technology leadership across Europe, Asia-Pacific and the Middle East, from strategy through execution. An item earns its place here when it would change an architecture, an investment case, or a risk position.
 
 </div>
 
@@ -37,7 +37,7 @@ Subscribe
   {% endfor %}
 </ul>
 {% else %}
-<p class="take-empty">Nothing written yet. The radar surfaces items; the reading gets added here.</p>
+<p class="take-empty">Nothing written yet.</p>
 {% endif %}
 
 <h2 class="section-label">Run log</h2>
@@ -69,9 +69,9 @@ Subscribe
 </div>
 
 <ul class="doc-links">
-  <li><a href="scoring">How items are scored</a> — the 0–10 significance scale and where the bar sits</li>
-  <li><a href="scrapers">Where it looks</a> — research feeds, vendor blogs, communities, trending repositories</li>
-  <li><a href="configuration">How it is configured</a> — sources, thresholds, providers</li>
+  <li><a href="scoring">How items are scored</a>: the 0–10 significance scale and where the bar sits</li>
+  <li><a href="scrapers">Where it looks</a>: research feeds, vendor blogs, communities, trending repositories</li>
+  <li><a href="configuration">How it is configured</a>: sources, thresholds, providers</li>
 </ul>
 
 

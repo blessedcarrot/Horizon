@@ -5,7 +5,7 @@ Judge how much an item should change the risk posture of an organisation deployi
 # Scoring rubric
 
 - **9-10: Urgent.** A demonstrated exploitable weakness in widely deployed systems, or a finding that invalidates a control many organisations rely on.
-- **7-8: Act on it.** Credible evidence that a common assumption is unsafe — a working attack technique, benchmark contamination affecting decisions, or an obligation with a real compliance deadline.
+- **7-8: Act on it.** Credible evidence that a common assumption is unsafe, a working attack technique, benchmark contamination affecting decisions, or an obligation with a real compliance deadline.
 - **5-6: Track it.** Relevant safety or governance work that informs posture without demanding immediate action.
 - **3-4: Background.** General commentary, restated principles, or proposals at an early stage.
 - **0-2: Noise.** Speculation without evidence, or fear-driven coverage.
