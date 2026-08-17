@@ -1,0 +1,38 @@
+{
+  "id": "energy-infrastructure",
+  "name": "Energy & Infrastructure",
+  "match": "match.md",
+  "analysis": "analysis.md",
+  "enrichment": {
+    "prompt": "enrichment.md",
+    "blocks": [
+      {
+        "id": "summary",
+        "type": "section",
+        "tools": [],
+        "primary": true
+      },
+      {
+        "id": "background",
+        "type": "section",
+        "tools": [
+          "web_search"
+        ]
+      },
+      {
+        "id": "operator_implication",
+        "type": "section",
+        "tools": [
+          "web_search"
+        ],
+        "optional": true
+      },
+      {
+        "id": "constraints",
+        "type": "section",
+        "tools": [],
+        "optional": true
+      }
+    ]
+  }
+}

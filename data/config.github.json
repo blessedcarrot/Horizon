@@ -31,6 +31,10 @@
       "guardrails": {
         "threshold": 7.0,
         "topic_dedup": true
+      },
+      "energy-infrastructure": {
+        "threshold": 6.5,
+        "topic_dedup": true
       }
     }
   },
@@ -170,7 +174,8 @@
         "business-markets",
         "practice",
         "horizon-research",
-        "guardrails"
+        "guardrails",
+        "energy-infrastructure"
       ]
     },
     "rss": [
@@ -226,7 +231,8 @@
         "profile": [
           "horizon-research",
           "business-markets",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ]
       },
       {
@@ -238,7 +244,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ]
       },
       {
@@ -261,7 +268,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ]
       },
       {
@@ -273,7 +281,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ]
       },
       {
@@ -285,7 +294,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ]
       },
       {
@@ -297,7 +307,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ]
       },
       {
@@ -309,7 +320,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ]
       },
       {
@@ -321,7 +333,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ]
       },
       {
@@ -333,7 +346,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ]
       },
       {
@@ -354,7 +368,8 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ],
         "content_extractor": "trafilatura"
       },
@@ -367,9 +382,43 @@
           "business-markets",
           "practice",
           "horizon-research",
-          "guardrails"
+          "guardrails",
+          "energy-infrastructure"
         ],
         "content_extractor": "trafilatura"
+      },
+      {
+        "name": "Latitude Media",
+        "url": "https://www.latitudemedia.com/feed",
+        "enabled": true,
+        "category": "energy-infra",
+        "profile": [
+          "energy-infrastructure",
+          "business-markets",
+          "practice"
+        ]
+      },
+      {
+        "name": "Utility Dive",
+        "url": "https://www.utilitydive.com/feeds/news/",
+        "enabled": true,
+        "category": "energy-infra",
+        "profile": [
+          "energy-infrastructure",
+          "business-markets",
+          "guardrails"
+        ]
+      },
+      {
+        "name": "Google News — AI & energy",
+        "url": "https://news.google.com/rss/search?q=AI%20AND%20%28utility%20OR%20%22power%20grid%22%20OR%20%22energy%20transition%22%20OR%20%22data%20center%20power%22%20OR%20electricity%29&hl=en-US&gl=US&ceid=US:en",
+        "enabled": true,
+        "category": "energy-infra",
+        "profile": [
+          "energy-infrastructure",
+          "business-markets",
+          "guardrails"
+        ]
       }
     ],
     "reddit": {
@@ -499,7 +548,8 @@
       "profile": [
         "business-markets",
         "guardrails",
-        "practice"
+        "practice",
+        "energy-infrastructure"
       ]
     }
   },
@@ -509,6 +559,7 @@
   "digest": {
     "max_items": 24,
     "profile_order": [
+      "energy-infrastructure",
       "business-markets",
       "practice",
       "horizon-research",
