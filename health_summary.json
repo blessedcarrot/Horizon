@@ -1,22 +1,15 @@
 {
   "totals": {
-    "fetched": 626,
-    "analyzed": 480,
-    "selected": 18
+    "fetched": 5,
+    "analyzed": 5,
+    "selected": 0
   },
   "per_source": {
-    "Hacker News": 17,
-    "Reddit": 5,
-    "OSS Insight": 1,
-    "Google News": 0,
-    "RSS Feeds": 594,
-    "GitHub": 9
+    "Hacker News": 5
   },
-  "zero_sources": [
-    "Google News"
-  ],
-  "errors": 2,
-  "warnings": 13,
+  "zero_sources": [],
+  "errors": 0,
+  "warnings": 0,
   "posts": [],
-  "finished_utc": "17 Aug 19:39"
+  "finished_utc": "17 Aug 20:31"
 }

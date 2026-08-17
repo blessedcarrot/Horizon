@@ -177,7 +177,7 @@ def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
         lines += [f"  - **{count}x** `{sig[:300]}`" for sig, count in grouped]
     else:
         lines.append(
-            "- ✅ **No errors**. An empty digest means items scored"
+            "- ✅ **No errors**. If the digest is empty, items scored"
             " below threshold."
         )
     return "\n".join(lines) + "\n"
