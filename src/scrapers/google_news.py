@@ -26,7 +26,6 @@ Design notes:
 
 from __future__ import annotations
 
-import asyncio
 import calendar
 import hashlib
 import logging
@@ -39,6 +38,7 @@ import feedparser
 import httpx
 
 from .base import BaseScraper
+from .retry import get_with_retry
 from ..models import ContentItem, GoogleNewsConfig, SourceType
 
 logger = logging.getLogger(__name__)
@@ -88,32 +88,13 @@ class GoogleNewsScraper(BaseScraper):
         }
 
         try:
-            # Google News returns transient 5xx often enough to matter: a single
-            # 503 on 2026-08-17 cost the whole vendor-watch channel for that run.
-            # On a once-daily cadence that is a day of blind coverage, so retry
-            # a few times with a widening pause before giving up.
-            last_error: Exception | None = None
-            response = None
-            for attempt in range(3):
-                try:
-                    response = await self.client.get(
-                        self.BASE_URL, params=params, follow_redirects=True
-                    )
-                    response.raise_for_status()
-                    break
-                except httpx.HTTPError as exc:
-                    last_error = exc
-                    if attempt == 2:
-                        raise
-                    logger.warning(
-                        "Google News attempt %d/3 failed (%s); retrying in %ds",
-                        attempt + 1,
-                        exc,
-                        2 * (attempt + 1),
-                    )
-                    await asyncio.sleep(2 * (attempt + 1))
-            if response is None:  # pragma: no cover - defensive
-                raise last_error or RuntimeError("Google News request failed")
+            response = await get_with_retry(
+                self.client,
+                self.BASE_URL,
+                source="Google News",
+                params=params,
+                follow_redirects=True,
+            )
 
             feed = feedparser.parse(response.text)
 

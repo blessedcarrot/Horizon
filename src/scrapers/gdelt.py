@@ -28,6 +28,7 @@ from typing import Any, List, Optional
 import httpx
 
 from .base import BaseScraper
+from .retry import get_with_retry
 from ..models import ContentItem, GDELTConfig, SourceType
 
 logger = logging.getLogger(__name__)
@@ -90,8 +91,12 @@ class GDELTScraper(BaseScraper):
             params["enddatetime"] = now_utc.strftime("%Y%m%d%H%M%S")
 
         try:
-            response = await self.client.get(
-                self.BASE_URL, params=params, follow_redirects=True
+            response = await get_with_retry(
+                self.client,
+                self.BASE_URL,
+                source="GDELT",
+                # GDELT documents one request per five seconds.
+                base_delay=5.0, params=params, follow_redirects=True
             )
             response.raise_for_status()
 

@@ -12,6 +12,7 @@ import httpx
 import feedparser
 
 from .base import BaseScraper
+from .retry import get_with_retry
 from ..extractors import ExtractorRegistry
 from ..models import ContentItem, SourceType, RSSSourceConfig
 
@@ -88,7 +89,13 @@ class RSSScraper(BaseScraper):
             )
 
             # Fetch feed content
-            response = await self.client.get(feed_url, follow_redirects=True)
+            response = await get_with_retry(
+                self.client,
+                feed_url,
+                source=f"RSS {source.name}",
+                base_delay=1.5,
+                follow_redirects=True,
+            )
             response.raise_for_status()
 
             # Parse feed
