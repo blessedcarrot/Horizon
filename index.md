@@ -58,23 +58,3 @@ Subscribe
 
 <p class="colophon">Built on <a href="https://github.com/Thysrael/Horizon">Horizon</a> (MIT), running on GitHub Actions with Claude doing the scoring and background research. Source and configuration: <a href="https://github.com/blessedcarrot/Horizon">blessedcarrot/Horizon</a>.</p>
 
-<details class="lang-alt">
-<summary>中文</summary>
-
-欢迎来到 [Horizon](https://github.com/thysrael/Horizon)，一个 AI 驱动的信息聚合系统。本站内容以英文发布。
-
-<ul class="run-log">
-  {% assign zh_posts = site.posts | where: "lang", "zh" %}
-  {% for post in zh_posts limit:10 %}
-    <li class="run-entry">
-      <a href="{{ post.url | relative_url }}">
-        <span class="run-date">{{ post.date | date: "%Y-%m-%d" }}</span>
-        <span class="run-time">{{ post.date | date: "%H:%M" }} UTC</span>
-      </a>
-    </li>
-  {% else %}
-    <li class="run-entry empty"><em>暂无内容</em></li>
-  {% endfor %}
-</ul>
-
-</details>
