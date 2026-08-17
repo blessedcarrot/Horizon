@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Subscribe
+permalink: /subscribe/
 description: Get the AI developments that clear the bar, twice a day or once a week.
 ---
 

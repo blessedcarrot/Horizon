@@ -1,4 +1,4 @@
-theme: jekyll-theme-cayman
+# No theme: docs/_layouts/default.html is our own shell.
 title: NEWS-Radar
 description: "Early warning on AI and agentic AI — curated by Bruno Coelho"
 baseurl: "" # served at the domain root, not a /Horizon subpath

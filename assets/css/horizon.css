@@ -24,6 +24,70 @@
   --hz-radius: 6px;
 }
 
+/* --- Page shell. Previously inherited from jekyll-theme-cayman; the theme was
+   dropped so the site owns its own markup and carries no third-party header
+   button or "maintained by" footer. --- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; line-height: 1.6; font-size: 16px; }
+
+.page-header {
+  text-align: left;
+  padding: 2.4rem 1.5rem 1.8rem !important;
+}
+.page-header .project-name {
+  font-size: clamp(1.3rem, 3vw, 1.6rem) !important;
+  margin: 0 0 .3rem;
+}
+.page-header .project-name a { color: var(--hz-text) !important; text-decoration: none; }
+.page-header .project-name a:hover { color: var(--hz-accent) !important; }
+.page-header .project-tagline { margin: 0; }
+
+.site-nav { display: flex; gap: 1.2rem; margin-top: 1.1rem; flex-wrap: wrap; }
+.site-nav a {
+  font-family: var(--hz-mono);
+  font-size: .8rem;
+  color: var(--hz-text-muted) !important;
+  text-decoration: none;
+  padding-bottom: .2rem;
+  border-bottom: 1px solid transparent;
+}
+.site-nav a:hover, .site-nav a:focus-visible {
+  color: var(--hz-accent) !important;
+  border-bottom-color: var(--hz-accent);
+  outline: none;
+}
+
+.main-content {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  word-wrap: break-word;
+}
+.main-content h1 { font-size: 1.7rem; margin-top: 0; }
+.main-content h2 { font-size: 1.25rem; }
+.main-content h3 { font-size: 1.05rem; }
+.main-content img { max-width: 100%; }
+.main-content table { display: block; overflow-x: auto; border-collapse: collapse; }
+.main-content th, .main-content td { border: 1px solid var(--hz-border); padding: .5em .8em; }
+
+.site-footer {
+  margin-top: 4rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--hz-border);
+  font-size: .85rem;
+  color: var(--hz-text-faint);
+}
+.site-footer-owner { margin: 0 0 .5rem; }
+.site-footer-owner strong { color: var(--hz-text-muted); font-family: var(--hz-mono); font-weight: 600; }
+.site-footer-meta { margin: 0; font-family: var(--hz-mono); font-size: .8rem; display: flex; gap: .6rem; flex-wrap: wrap; }
+.site-footer-meta span { opacity: .4; }
+
+@media (max-width: 640px) {
+  .main-content { padding: 1.5rem 1.1rem 3rem; }
+  .page-header { padding: 1.8rem 1.1rem 1.4rem !important; }
+}
+
 body {
   background-color: var(--hz-bg) !important;
   color: var(--hz-text) !important;
