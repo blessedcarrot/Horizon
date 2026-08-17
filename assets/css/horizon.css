@@ -3,16 +3,17 @@
    blog. Monospace carries structure and numbers; a reading face carries the
    analysis prose, which runs to a few hundred words per item. Exactly one
    accent, spent only on scores and links, so the eye tracks significance
-   rather than decoration. Dark-first, light honoured when the OS asks.      */
+   rather than decoration. Deliberately dark only: this is a branded asset,
+   and one committed visual world reads stronger than two adequate ones.     */
 
 :root {
-  --hz-bg: #0d1117;
-  --hz-surface: #151b23;
-  --hz-surface-2: #1c232d;
-  --hz-border: #263040;
-  --hz-text: #e6edf3;
-  --hz-text-muted: #8b98a9;
-  --hz-text-faint: #5c6773;
+  --hz-bg: #0a0c10;
+  --hz-surface: #12161d;
+  --hz-surface-2: #191f28;
+  --hz-border: #232b38;
+  --hz-text: #e8edf4;
+  --hz-text-muted: #909dad;
+  --hz-text-faint: #626d7c;
   --hz-accent: #ffb224;        /* amber — the single signal colour */
   --hz-accent-dim: #7a5613;
   --hz-link: #6cb6ff;
@@ -21,21 +22,6 @@
   --hz-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
              "Helvetica Neue", Arial, sans-serif;
   --hz-radius: 6px;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --hz-bg: #fbfcfd;
-    --hz-surface: #f2f5f8;
-    --hz-surface-2: #e9eef4;
-    --hz-border: #d5dde6;
-    --hz-text: #10171f;
-    --hz-text-muted: #55606d;
-    --hz-text-faint: #7b8794;
-    --hz-accent: #b26a00;
-    --hz-accent-dim: #f0d9ac;
-    --hz-link: #0a5ac9;
-  }
 }
 
 body {
@@ -124,6 +110,18 @@ pre {
 }
 .radar-intro strong { color: var(--hz-text); }
 
+/* --- Byline: the credibility line. Quieter than the intro, but present on
+   first screen — a portfolio asset has to say who is behind the judgement. */
+.byline {
+  font-size: .88rem;
+  color: var(--hz-text-muted);
+  max-width: 62ch;
+  margin: -1.2rem 0 1.6rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--hz-border);
+}
+.byline strong { color: var(--hz-text); font-weight: 600; }
+
 .rss-btn {
   display: inline-flex; align-items: center; gap: .5em;
   margin-top: .9rem;
@@ -192,6 +190,13 @@ pre {
 .doc-links { list-style: none; padding: 0; font-size: .92rem; }
 .doc-links li { padding: .35em 0; color: var(--hz-text-muted); }
 .doc-links a { font-family: var(--hz-mono); }
+
+.colophon {
+  font-size: .8rem;
+  color: var(--hz-text-faint);
+  max-width: 62ch;
+  margin-top: 1.2rem;
+}
 
 .lang-alt { margin-top: 2.5rem; }
 .lang-alt summary {
