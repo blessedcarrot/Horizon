@@ -11,7 +11,7 @@ Usage:
 Effects:
   - Prints a health report; also writes it to $GITHUB_STEP_SUMMARY when set.
   - Emits GitHub workflow-command annotations (::error/::warning/::notice),
-    which surface in the Annotations box at the top of the run page — the
+    which surface in the Annotations box at the top of the run page, the
     only surface visible without opening logs or the summary tab.
   - With --append-digest: appends a compact health footer to today's
     digest file(s) (docs/_posts/YYYY-MM-DD-summary-*.md).
@@ -44,7 +44,7 @@ MAX_ANNOTATIONS = 8
 FOUND_RE = re.compile(r"Found (\d+) items? from (.+?)\s*$")
 # Per-sub-source breakdown lines, e.g. "      • The Verge - AI: 1" or
 # "      • OpenAI News: 0 (FAILED)". Only those printed during fetching are
-# collected — the same format is reused later for selected items.
+# collected, the same format is reused later for selected items.
 DETAIL_RE = re.compile(r"^\s*•\s*(?P<name>.+?):\s*(?P<count>\d+)(?P<failed>\s*\(FAILED\))?\s*$")
 FETCHED_RE = re.compile(r"Fetched (\d+) items? from all sources")
 ANALYZED_RE = re.compile(r"Analyzed (\d+) items? with AI")
@@ -184,7 +184,7 @@ def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
 
 
 def todays_posts(posts_dir: Path) -> list[Path]:
-    """This run's digest file(s) — the newest per language for today.
+    """This run's digest file(s), the newest per language for today.
 
     Posts are named "<date>-<HHMM>-summary-<lang>.md" (the run time was added
     so a day's second run stops overwriting the first). Several files can

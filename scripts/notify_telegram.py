@@ -6,7 +6,7 @@ that run produced, then sends a short message with the top items and a link
 to the published page.
 
 Sent from the workflow rather than through Horizon's own webhook because
-Horizon's templates expose only message_title and summary — there is no
+Horizon's templates expose only message_title and summary, there is no
 placeholder for a link, which is the main thing this message is for. Doing
 it here also lets us respect Telegram's 4096-character limit and stay silent
 on quiet runs.
@@ -15,12 +15,12 @@ Usage:
   python scripts/notify_telegram.py [--health health_summary.json] [--always]
 
 Environment:
-  TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID  — required; without them this exits
+  TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID , required; without them this exits
                                           quietly so the pipeline works
                                           unchanged until they are set.
-  GITHUB_EVENT_NAME                     — "schedule" or "workflow_dispatch",
+  GITHUB_EVENT_NAME                    , "schedule" or "workflow_dispatch",
                                           reported as the run type.
-  GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_RUN_ID — used to link the run
+  GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_RUN_ID, used to link the run
                                           when a message reports errors.
 """
 
@@ -193,7 +193,7 @@ def main() -> int:
     )
 
     if args.self_test:
-        # Verifies the whole delivery path — secrets, network, formatting —
+        # Verifies the whole delivery path, secrets, network, formatting , 
         # without a pipeline run, which otherwise costs a couple of minutes
         # of model calls per attempt. Use after rotating credentials too.
         message = (
