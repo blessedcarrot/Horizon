@@ -64,14 +64,12 @@ Subscribe
 
 <div class="pipeline" markdown="1">
 
-`fetch` → `dedupe` → `score 0–10` → `threshold` → `enrich` → `publish`
+`read` → `deduplicate` → `route to a theme` → `score 0–10` → `apply that theme's bar` → `research` → `publish`
 
 </div>
 
 <ul class="doc-links">
-  <li><a href="scoring">How items are scored</a>: the 0–10 significance scale and where the bar sits</li>
-  <li><a href="scrapers">Where it looks</a>: research feeds, vendor blogs, communities, trending repositories</li>
-  <li><a href="configuration">How it is configured</a>: sources, thresholds, providers</li>
+  <li><a href="{{ '/method/' | relative_url }}">Method</a>: where it reads, how items are scored, and where each theme's bar sits.</li>
 </ul>
 
 

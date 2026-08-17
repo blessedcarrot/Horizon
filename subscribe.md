@@ -42,9 +42,9 @@ Curated by **Bruno Coelho**, technology leadership across Europe, Asia-Pacific a
 <ul class="sub-facts">
   <li><span class="k">Cadence</span><span class="v">Daily</span></li>
   <li><span class="k">Volume</span><span class="v">Typically a handful of items per edition, out of several hundred read</span></li>
-  <li><span class="k">Themes</span><span class="v">Energy &amp; Infrastructure · Business &amp; Markets · Practice · Horizon · Guardrails</span></li>
+  <li><span class="k">Themes</span><span class="v">Critical Infrastructure · Reliability &amp; Assurance · Business &amp; Markets · Practice · Horizon</span></li>
   <li><span class="k">Selection</span><span class="v">Every item scored 0–10; each theme has its own bar</span></li>
   <li><span class="k">Cost</span><span class="v">Free, and there is nothing to sell you</span></li>
 </ul>
 
-<p class="sub-note">Each theme carries its own question. Business items answer what changes commercially. Practice items answer what a team would do differently. Horizon items answer what would have to be true for a result to matter. Guardrails items answer who is exposed and what to check. Energy items answer what an operator would do about it. <a href="{{ '/' | relative_url }}">See the latest editions</a> or read <a href="{{ '/scoring' | relative_url }}">how items are scored</a>.</p>
+<p class="sub-note">Each theme carries its own question. Business items answer what changes commercially. Practice items answer what a team would do differently. Horizon items answer what would have to be true for a result to matter. Guardrails items answer who is exposed and what to check. Energy items answer what an operator would do about it. <a href="{{ '/' | relative_url }}">See the latest editions</a> or read the <a href="{{ '/method/' | relative_url }}">method</a>.</p>
