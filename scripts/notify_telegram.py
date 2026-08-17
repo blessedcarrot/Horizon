@@ -202,7 +202,7 @@ def main() -> int:
             "If you can read this, <code>TELEGRAM_BOT_TOKEN</code> and "
             "<code>TELEGRAM_CHAT_ID</code> are set correctly and run "
             "notifications will arrive here.\n\n"
-            '→ <a href="https://blessedcarrot.github.io/Horizon/">The radar</a>'
+            '→ <a href="https://radar.bcoelho.com/">The radar</a>'
         )
         if args.dry_run:
             print(message)
