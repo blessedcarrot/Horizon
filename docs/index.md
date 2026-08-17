@@ -56,5 +56,4 @@ Subscribe
   <li><a href="configuration">How it is configured</a> — sources, thresholds, providers</li>
 </ul>
 
-<p class="colophon">Built on <a href="https://github.com/Thysrael/Horizon">Horizon</a> (MIT), running on GitHub Actions with Claude doing the scoring and background research. Source and configuration: <a href="https://github.com/blessedcarrot/Horizon">blessedcarrot/Horizon</a>.</p>
 
