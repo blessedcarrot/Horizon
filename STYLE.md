@@ -24,6 +24,13 @@ evolving".
 **No three-item lists for rhythm.** Three items are fine when there are three
 things. They are a tell when the third is filler.
 
+**Define a thing by what it does.** This is the same rule as the one above about
+negative-to-positive constructions, at the scale of a section. A heading like
+"What it does not do", followed by a list of exclusions, describes a shape by
+its shadow. Say what the thing is for. A factual negation inside a sentence is
+fine ("popularity is not evidence of importance"); building a section out of
+negations is the problem.
+
 **Cut qualifiers that defend against doubts the reader does not have.**
 "Items genuinely scored below threshold" says no more than "items scored below
 threshold".
@@ -58,14 +65,24 @@ grep -rniE "not (just|only|merely) |, not | rather than | instead of " docs/ pro
 # 3. Promotional register
 grep -rniE "crucial|pivotal|game.chang|landscape|delve|unlock|leverag" docs/ profiles/*/[man]*.md
 
-# 4. Every profile still carries the style constraints. Upstream's four
+# 4. Sections and headings framed by what something is not
+grep -rnE "^#+ .*(not|never|avoid)|<h[1-3][^>]*>[^<]*(not|Not)" docs/*.md
+
+# 5. Every profile still carries the style constraints. Upstream's four
 #    profiles (ai-creator, finance-news, tech-blog, tech-news) are expected
 #    here: no source routes to them, so their prompts never run.
 grep -L "Style constraints" profiles/*/enrichment.md
 ```
 
-A hit is not automatically a fault. A quoted source, or "not" inside a normal
-sentence, is fine. The check exists to make each one a decision.
+A hit is not automatically a fault. A quoted source, or a factual negation
+inside a sentence, is fine. The check exists to make each one a decision.
+
+The audit has already earned itself twice. The first run found em dashes in both
+scripts and 69 across the inherited documentation pages. The second found a
+whole section, "What it does not do", written as three exclusions in a row,
+which is the rule about negation appearing at a scale the greps were not looking
+for. When something slips through, extend the checks rather than only fixing the
+instance.
 
 ## Checking generated output
 

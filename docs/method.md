@@ -46,8 +46,8 @@ description: How items are found, scored, filtered and written up, and where the
 
 <p class="method-note">What survives is researched further, with background and consequence added, then published. Each edition carries a health report showing what was read, what cleared, and whether anything failed, so an empty edition can be told apart from a broken one.</p>
 
-<h2 class="section-label">What it does not do</h2>
+<h2 class="section-label">The point</h2>
 
-<p class="method-note">It does not rank by popularity, cover funding announcements for their own sake, or attempt completeness. Reading everything is what the machine is for. Deciding what deserves attention is the point of the exercise, and the commentary is where that judgement is argued rather than implied.</p>
+<p class="method-note">Reading everything is cheap now. Judgement is the scarce part, so the effort goes there: choosing what earns attention, and saying why. The commentary is where that judgement gets argued in public.</p>
 
 <p class="method-note">Built on <a href="https://github.com/Thysrael/Horizon">Horizon</a>, an open source pipeline, with Claude doing the scoring and background research. The sources, themes, scoring rubrics and thresholds here are my own. <a href="{{ '/subscribe/' | relative_url }}">Follow the radar</a>.</p>
