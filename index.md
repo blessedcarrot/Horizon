@@ -22,6 +22,50 @@ Subscribe
 
 </div>
 
+{%- assign en_items = site.items | where: "lang", "en" | sort: "date" | reverse -%}
+{%- assign latest_edition = en_items[0].edition_url -%}
+{%- assign latest_items = en_items | where: "edition_url", latest_edition -%}
+
+{% if latest_items.size > 0 %}
+<h2 class="section-label">Latest edition</h2>
+
+<p class="edition-line">
+  <a href="{{ latest_edition | relative_url }}">{{ en_items[0].date | date: "%d %B %Y" }}</a>
+  <span aria-hidden="true">·</span> {{ latest_items.size }} item{% if latest_items.size != 1 %}s{% endif %}
+</p>
+
+{% for theme in site.themes %}
+  {%- assign theme_items = latest_items | where: "theme", theme.id -%}
+  {% if theme_items.size > 0 %}
+  <section class="theme-block">
+    <h3 class="theme-heading"><a href="/{{ theme.id }}/">{{ theme.name }}</a></h3>
+    <p class="theme-question">{{ theme.question }}</p>
+    <ul class="item-list">
+      {% for item in theme_items %}{% include item-row.html item=item %}{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+{% endfor %}
+
+<p class="theme-index">
+  Every theme:
+  {% for theme in site.themes %}<a href="/{{ theme.id }}/">{{ theme.name }}</a>{% unless forloop.last %} <span aria-hidden="true">·</span> {% endunless %}{% endfor %}
+</p>
+{% else %}
+<h2 class="section-label">Latest edition</h2>
+
+{%- assign en_posts_head = site.posts | where: "lang", "en" -%}
+{% if en_posts_head.size > 0 %}
+<p class="edition-line">
+  <a href="{{ en_posts_head[0].url | relative_url }}">{{ en_posts_head[0].date | date: "%d %B %Y" }}</a>
+  <span aria-hidden="true">·</span> {{ en_posts_head[0].items | default: 0 }} items
+</p>
+<p class="take-empty">Items are grouped by theme from the next edition onwards. Until then, read the edition itself.</p>
+{% else %}
+<p class="take-empty">No editions published yet.</p>
+{% endif %}
+{% endif %}
+
 <h2 class="section-label">Commentary</h2>
 
 {% assign takes = site.commentary | where_exp: "c", "c.title" | sort: "date" | reverse %}
@@ -40,25 +84,26 @@ Subscribe
 <p class="take-empty">Nothing written yet.</p>
 {% endif %}
 
-<h2 class="section-label">Run log</h2>
-
-<ul class="run-log">
-  {% assign en_posts = site.posts | where: "lang", "en" %}
-  {% for post in en_posts limit:30 %}
-    <li class="run-entry">
-      <a href="{{ post.url | relative_url }}">
-        <span class="run-date">{{ post.date | date: "%Y-%m-%d" }}</span>
-        <span class="run-time">{{ post.date | date: "%H:%M" }} UTC</span>
-        <span class="run-meta">
-          <span class="run-count{% if post.items == 0 %} zero{% endif %}">{{ post.items | default: 0 }}</span> flagged
-          <span class="run-sep">/</span> {{ post.analyzed | default: 0 }} analysed
-        </span>
-      </a>
-    </li>
-  {% else %}
-    <li class="run-entry empty"><em>No runs published yet.</em></li>
-  {% endfor %}
-</ul>
+<details class="run-log-wrap">
+  <summary>Run log</summary>
+  <ul class="run-log">
+    {% assign en_posts = site.posts | where: "lang", "en" %}
+    {% for post in en_posts limit:30 %}
+      <li class="run-entry">
+        <a href="{{ post.url | relative_url }}">
+          <span class="run-date">{{ post.date | date: "%Y-%m-%d" }}</span>
+          <span class="run-time">{{ post.date | date: "%H:%M" }} UTC</span>
+          <span class="run-meta">
+            <span class="run-count{% if post.items == 0 %} zero{% endif %}">{{ post.items | default: 0 }}</span> flagged
+            <span class="run-sep">/</span> {{ post.analyzed | default: 0 }} analysed
+          </span>
+        </a>
+      </li>
+    {% else %}
+      <li class="run-entry empty"><em>No runs published yet.</em></li>
+    {% endfor %}
+  </ul>
+</details>
 
 <h2 class="section-label">How it works</h2>
 

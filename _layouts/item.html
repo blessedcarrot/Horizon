@@ -1,0 +1,34 @@
+---
+layout: default
+---
+<article class="item-page">
+
+  <p class="item-kicker">
+    <a href="/{{ page.theme }}/">{{ page.theme_name }}</a>
+    <span aria-hidden="true">·</span>
+    <span class="score-badge" data-tier="{% if page.score >= 8 %}high{% else %}good{% endif %}">{{ page.score }}</span>
+  </p>
+
+  <h1 class="item-title">{{ page.title }}</h1>
+
+  <p class="item-meta">
+    Surfaced <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%d %B %Y" }}</time>
+    {% if page.link %}<span aria-hidden="true">·</span> <a class="item-source-link" href="{{ page.link }}">Read the original</a>{% endif %}
+  </p>
+
+  {% unless page.enriched %}
+  <p class="item-thin">Background research did not complete for this item, so it carries the headline and the summary only.</p>
+  {% endunless %}
+
+  <div class="item-body">
+    {{ content }}
+  </div>
+
+  <footer class="item-foot">
+    {% if page.edition_url %}
+    <p><a href="{{ page.edition_url | relative_url }}">Read the full edition of {{ page.edition_title }}</a></p>
+    {% endif %}
+    <p><a href="/{{ page.theme }}/">More in {{ page.theme_name }}</a> <span aria-hidden="true">·</span> <a href="{{ '/subscribe/' | relative_url }}">Follow the radar</a></p>
+  </footer>
+
+</article>
