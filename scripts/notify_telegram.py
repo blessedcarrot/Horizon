@@ -103,8 +103,13 @@ def build_message(health: dict, run_type: str) -> str:
     elif nothing_cleared:
         lines.append(f'Nothing met the threshold · {stats.get("analyzed")} analyzed')
     else:
+        # Lead with what the message is about to list. "24 cleared threshold"
+        # above a list of 17 items reads as seven items gone missing, when
+        # topic dedup merged them.
+        published = stats.get("published")
+        head = f'{published} published · ' if published is not None else ""
         lines.append(
-            f'{stats.get("selected")} cleared threshold · '
+            f'{head}{stats.get("selected")} cleared threshold · '
             f'{stats.get("analyzed")} analyzed'
         )
     lines.append("")

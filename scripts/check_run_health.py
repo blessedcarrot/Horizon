@@ -49,16 +49,41 @@ DETAIL_RE = re.compile(r"^\s*•\s*(?P<name>.+?):\s*(?P<count>\d+)(?P<failed>\s*
 FETCHED_RE = re.compile(r"Fetched (\d+) items? from all sources")
 ANALYZED_RE = re.compile(r"Analyzed (\d+) items? with AI")
 SELECTED_RE = re.compile(r"Selected (\d+) items? with profile filters")
+# The rest of the funnel. Reporting only fetched/analyzed/cleared made the
+# footer contradict the page it sits on: a run that cleared 24 and published
+# 17 looked like it had lost 7 items, when topic dedup had merged them.
+MERGED_RE = re.compile(r"Merged (\d+) cross-source duplicates")
+TOPIC_DEDUP_RE = re.compile(r"Removed (\d+) topic duplicates")
+BALANCED_RE = re.compile(r"Balanced digest selected (\d+)/(\d+) items")
+ENRICHED_RE = re.compile(r"Enriched (\d+)/(\d+) items")
+TOKENS_RE = re.compile(
+    r"Token usage this run: (\d+) tokens \(input: (\d+), output: (\d+)\)"
+)
+# Log records wrap when rich falls back to 80 columns, putting the item id and
+# the actual cause on the lines below the one carrying the ERROR level. The
+# workflow now sets COLUMNS so this should not happen, but downloaded logs from
+# before that change still wrap, and a long enough message wraps at any width.
+CONTINUATION_RE = re.compile(r"^\s{8,}(?![\u2022])\S")
+# Item ids vary per failure and would defeat grouping once the continuation is
+# joined back on. Collapse them so N failures of one kind stay one signature.
+ITEM_ID_RE = re.compile(r"[\w.\-]+:[\w.\-]+:[0-9a-f]{8,}")
+HASH_RE = re.compile(r"\b[0-9a-f]{12,}\b")
 
 
 def parse_log(path: Path):
     per_source: dict[str, int] = {}
     per_feed: dict[str, tuple[int, bool]] = {}
-    totals = {"fetched": None, "analyzed": None, "selected": None}
+    totals = {
+        "fetched": None, "merged": None, "analyzed": None, "selected": None,
+        "topic_dupes": None, "published": None,
+        "enriched": None, "enrich_attempted": None,
+        "tokens": None, "tokens_in": None, "tokens_out": None,
+    }
     errors: list[str] = []
     warnings = 0
     fetching = True  # detail lines only count before fetching ends
     current_source = None
+    open_error: int | None = None  # index in errors awaiting wrapped remainder
 
     for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
         line = ISO_PREFIX_RE.sub("", ANSI_RE.sub("", raw))
@@ -78,8 +103,29 @@ def parse_log(path: Path):
             totals["analyzed"] = int(m.group(1))
         elif m := SELECTED_RE.search(line):
             totals["selected"] = int(m.group(1))
+        elif m := MERGED_RE.search(line):
+            totals["merged"] = int(m.group(1))
+        elif m := TOPIC_DEDUP_RE.search(line):
+            totals["topic_dupes"] = int(m.group(1))
+        elif m := BALANCED_RE.search(line):
+            totals["published"] = int(m.group(1))
+        elif m := ENRICHED_RE.search(line):
+            totals["enriched"] = int(m.group(1))
+            totals["enrich_attempted"] = int(m.group(2))
+        elif m := TOKENS_RE.search(line):
+            totals["tokens"] = int(m.group(1))
+            totals["tokens_in"] = int(m.group(2))
+            totals["tokens_out"] = int(m.group(3))
         if ERROR_RE.search(line):
             errors.append(line.strip()[:200])
+            open_error = len(errors) - 1
+        elif open_error is not None and CONTINUATION_RE.match(line):
+            # A wrapped remainder of the record above: the part that names the
+            # item and the cause. Join it back on, capped so a stack trace
+            # cannot run away with the annotation.
+            errors[open_error] = (errors[open_error] + " " + line.strip())[:400]
+        elif line.strip():
+            open_error = None
         if WARNING_RE.search(line):
             warnings += 1
 
@@ -97,6 +143,8 @@ def group_errors(errors: list[str]) -> list[tuple[str, int]]:
     for line in errors:
         sig = TIMESTAMP_RE.sub("", line)
         sig = QUOTED_RE.sub("'…'", sig)
+        sig = ITEM_ID_RE.sub("<item>", sig)
+        sig = HASH_RE.sub("<hash>", sig)
         sig = " ".join(sig.split())
         groups[sig] = groups.get(sig, 0) + 1
     return sorted(groups.items(), key=lambda kv: -kv[1])
@@ -110,11 +158,15 @@ def annotate(level: str, message: str) -> None:
 
 def emit_annotations(per_source, per_feed, totals, grouped, warnings) -> None:
     headline = (
-        f"Radar run: {totals['fetched']} fetched, {totals['analyzed']} analyzed, "
-        f"{totals['selected']} cleared threshold, "
+        f"Radar run: {funnel(totals).replace('**', '')}. "
         f"{sum(c for _, c in grouped)} errors, {warnings} warnings"
     )
+    if totals["tokens"]:
+        headline += f", {totals['tokens']:,} tokens"
     annotate("notice", headline)
+
+    if note := enrichment_note(totals):
+        annotate("warning", note.lstrip("- ").replace("**", ""))
 
     if zero := sorted(n for n, c in per_source.items() if c == 0):
         annotate(
@@ -139,15 +191,60 @@ def emit_annotations(per_source, per_feed, totals, grouped, warnings) -> None:
         )
 
 
+def funnel(totals) -> str:
+    """The whole chain from raw pull to published, as one line.
+
+    Reporting fetched, analyzed and cleared alone left the biggest drop
+    invisible: a reader comparing "cleared 24" against a page of 17 items had
+    no way to tell merged duplicates from lost coverage.
+    """
+    steps = []
+    if totals["fetched"] is not None:
+        steps.append(f"{totals['fetched']} fetched")
+    if totals["merged"]:
+        steps.append(f"{totals['merged']} cross-source duplicates merged")
+    if totals["analyzed"] is not None:
+        steps.append(f"{totals['analyzed']} analyzed")
+    if totals["selected"] is not None:
+        steps.append(f"{totals['selected']} cleared threshold")
+    if totals["topic_dupes"]:
+        steps.append(f"{totals['topic_dupes']} topic duplicates merged")
+    if totals["published"] is not None:
+        steps.append(f"**{totals['published']} published**")
+    return " → ".join(steps)
+
+
+def enrichment_note(totals):
+    """A failed enrichment leaves the item published and thin.
+
+    A failed second pass still publishes the headline and the summary, with no
+    background and no references, and the page gives no sign. Name it, or the
+    only visible effect is a red X on a run that looks otherwise complete.
+    """
+    done, tried = totals["enriched"], totals["enrich_attempted"]
+    if done is None or tried is None or done >= tried:
+        return None
+    return (
+        f"- ⚠️ **{tried - done} of {tried} published items lost their background"
+        " section** because enrichment failed. They carry a headline and a"
+        " summary only."
+    )
+
+
 def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
     zero_sources = sorted(n for n, c in per_source.items() if c == 0)
     error_count = sum(c for _, c in grouped)
     lines = ["## Run health", ""]
-    lines.append(
-        f"- **Fetched:** {totals['fetched']} | **Analyzed:** {totals['analyzed']}"
-        f" | **Cleared threshold:** {totals['selected']}"
-        f" | **Errors:** {error_count} | **Warnings:** {warnings}"
-    )
+    lines.append(f"- **Funnel:** {funnel(totals)}")
+    tail = f"- **Errors:** {error_count} | **Warnings:** {warnings}"
+    if totals["tokens"]:
+        tail += (
+            f" | **Tokens:** {totals['tokens']:,}"
+            f" ({totals['tokens_in']:,} in / {totals['tokens_out']:,} out)"
+        )
+    lines.append(tail)
+    if note := enrichment_note(totals):
+        lines.append(note)
     if per_source:
         counts = ", ".join(f"{n}: {c}" for n, c in sorted(per_source.items()))
         lines.append(f"- **Per-source items:** {counts}")
