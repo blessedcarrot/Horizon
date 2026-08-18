@@ -16,7 +16,7 @@ seen the item.
 
 **Why this is signal.** The part nobody can automate: what you have seen that
 makes this different from the noise around it. Reference the thing you have
-actually lived through — a programme, a vendor conversation, a failure.
+actually lived through: a programme, a vendor conversation, a failure.
 
 **What it changes.** Two altitudes, because two audiences read this. For the
 team building: what they would do differently. For the board funding it: what

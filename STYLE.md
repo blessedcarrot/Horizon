@@ -74,7 +74,7 @@ grep -rnE "^#+ .*(not|never|avoid)|<h[1-3][^>]*>[^<]*(not|Not)" docs/*.md
 grep -L "Style constraints" profiles/*/enrichment.md
 ```
 
-A hit is not automatically a fault. A quoted source, or a factual negation
+`STYLE.md` matches its own search patterns; exclude it when running the audit. A hit elsewhere is not automatically a fault. A quoted source, or a factual negation
 inside a sentence, is fine. The check exists to make each one a decision.
 
 The audit has already earned itself twice. The first run found em dashes in both
