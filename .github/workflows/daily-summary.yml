@@ -39,6 +39,14 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           HORIZON_WEBHOOK_URL: ${{ secrets.HORIZON_WEBHOOK_URL }}
+          # Horizon logs through rich, which falls back to 80 columns when
+          # stdout is not a terminal and wraps the message into a narrow
+          # column. Everything past that lands on continuation lines, so an
+          # error read as "Error enriching item" with the item id and the
+          # cause on the two lines below, where the health check does not
+          # look. rich honours COLUMNS, so one line here keeps each log
+          # record on one line and makes the run diagnosable.
+          COLUMNS: "200"
         run: |
           set -o pipefail
           # 26h window on a daily cadence: 2h of deliberate overlap. Windows that

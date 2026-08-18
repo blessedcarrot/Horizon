@@ -175,7 +175,11 @@ class ContentEnricher:
                     "\n\nYour previous response did not satisfy the output contract. "
                     f"Validation error: {exc}. Return only a corrected JSON object."
                 )
-        raise ValueError(error_message) from validation_error
+        # Chain the cause into the message as well as the __cause__: the only
+        # place these surface is a log line rendered with %s, which shows the
+        # outer message alone. Without this, "Invalid enrichment artifact"
+        # never says which block was missing or unknown.
+        raise ValueError(f"{error_message}: {validation_error}") from validation_error
 
     async def enrich_batch(self, items: list[ContentItem]) -> EnrichmentBatchResult:
         semaphore = asyncio.Semaphore(self._get_concurrency())
