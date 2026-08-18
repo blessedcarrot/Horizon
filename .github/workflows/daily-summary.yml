@@ -82,8 +82,11 @@ jobs:
         run: python scripts/notify_telegram.py --always
 
       # Runs AFTER deploy so a broken run still publishes its digest;
-      # the red X on the run is the "go read the log" signal.
-      - name: Fail job if items errored during the run
+      # the red X on the run is the "go read the log" signal. Only errors that
+      # damage the run count here. Items that published without their
+      # background section are reported as warnings and leave the job green,
+      # because a build that is red every day is a signal nobody reads.
+      - name: Fail job if the run was damaged
         run: |
           ERRS=$(cat health_errors.txt 2>/dev/null || echo 0)
           if [ "$ERRS" -gt 0 ]; then

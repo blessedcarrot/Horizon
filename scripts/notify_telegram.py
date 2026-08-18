@@ -126,6 +126,14 @@ def build_message(health: dict, run_type: str) -> str:
         lines.insert(2, f"🔴 <b>{errors} error(s) during this run.</b> "
                         f"The digest may be incomplete.{run_link}\n")
 
+    # Reported, but not as an alarm: these items are on the page, without their
+    # background section. Saying "the digest may be incomplete" for this made
+    # every ordinary run read like a failure.
+    if degraded := health.get("degraded", 0):
+        lines.append(
+            f"🟡 {degraded} item(s) published without background research.\n"
+        )
+
     if zero := health.get("zero_sources"):
         lines.append(f"⚠️ No items from: {esc(', '.join(zero))}\n")
 

@@ -150,6 +150,42 @@ def group_errors(errors: list[str]) -> list[tuple[str, int]]:
     return sorted(groups.items(), key=lambda kv: -kv[1])
 
 
+# Errors that cost an item its depth while still publishing it. These are a
+# different kind of event from a broken run, and conflating the two is how a
+# build ends up permanently red: every content-producing run between
+# 2026-08-17 and 2026-08-18 failed on exactly two of these, out of seventeen
+# items published successfully. A red X that appears every day stops being read,
+# which is the failure this whole script exists to prevent.
+DEGRADING_RE = re.compile(r"Error enriching item")
+# Above this share of the items that reached enrichment, a degradation is no
+# longer a couple of awkward abstracts; something systemic is wrong with the
+# contract or the model, and the run should go red.
+DEGRADED_FATAL_SHARE = 0.25
+
+
+def split_by_severity(grouped, totals):
+    """Separate errors that break a run from errors that only thin an item.
+
+    Returns (fatal, degrading, escalated). `escalated` is True when the
+    degrading errors are numerous enough to be a systemic problem rather than
+    a few items, in which case they count as fatal after all.
+    """
+    fatal = [(s, c) for s, c in grouped if not DEGRADING_RE.search(s)]
+    degrading = [(s, c) for s, c in grouped if DEGRADING_RE.search(s)]
+
+    attempted = totals.get("enrich_attempted")
+    degraded_count = sum(c for _, c in degrading)
+    escalated = bool(degrading) and (
+        not attempted
+        or totals.get("enriched") == 0
+        or degraded_count / attempted > DEGRADED_FATAL_SHARE
+    )
+    if escalated:
+        fatal = fatal + degrading
+        degrading = []
+    return fatal, degrading, escalated
+
+
 def annotate(level: str, message: str) -> None:
     """Emit a workflow command; shows in the run page's Annotations box."""
     clean = message.replace("\r", " ").replace("\n", " ").strip()
@@ -181,14 +217,25 @@ def emit_annotations(per_source, per_feed, totals, grouped, warnings) -> None:
         # Still louder than a zero-item feed, which may simply be quiet.
         annotate("warning", f"Feeds that FAILED to fetch: {', '.join(failed)}")
 
-    for sig, count in grouped[:MAX_ANNOTATIONS]:
-        annotate("error", f"{count}x {sig[:300]}")
-    if len(grouped) > MAX_ANNOTATIONS:
+    fatal, degrading, escalated = split_by_severity(grouped, totals)
+    if escalated:
         annotate(
             "error",
-            f"{len(grouped) - MAX_ANNOTATIONS} further distinct error type(s) "
+            "Enrichment failed on more than a quarter of the items that reached "
+            "it. Treating this as a broken run, not a few thin items.",
+        )
+    for sig, count in fatal[:MAX_ANNOTATIONS]:
+        annotate("error", f"{count}x {sig[:300]}")
+    if len(fatal) > MAX_ANNOTATIONS:
+        annotate(
+            "error",
+            f"{len(fatal) - MAX_ANNOTATIONS} further distinct error type(s) "
             "not shown. See the run log.",
         )
+    # Degradation is reported at warning level so the job stays green. The
+    # item published; only its depth was lost.
+    for sig, count in degrading[:MAX_ANNOTATIONS]:
+        annotate("warning", f"{count}x {sig[:300]}")
 
 
 def funnel(totals) -> str:
@@ -233,10 +280,15 @@ def enrichment_note(totals):
 
 def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
     zero_sources = sorted(n for n, c in per_source.items() if c == 0)
-    error_count = sum(c for _, c in grouped)
+    fatal_head, degrading_head, _ = split_by_severity(grouped, totals)
     lines = ["## Run health", ""]
     lines.append(f"- **Funnel:** {funnel(totals)}")
-    tail = f"- **Errors:** {error_count} | **Warnings:** {warnings}"
+    # Count the two kinds separately in the headline. One number covering both
+    # is what made "2 errors" sit above a page where nothing had gone missing.
+    tail = f"- **Errors:** {sum(c for _, c in fatal_head)}"
+    if degrading_head:
+        tail += f" | **Items published thin:** {sum(c for _, c in degrading_head)}"
+    tail += f" | **Warnings:** {warnings}"
     if totals["tokens"]:
         tail += (
             f" | **Tokens:** {totals['tokens']:,}"
@@ -266,13 +318,28 @@ def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
         if empty:
             lines.append(f"- **Feeds with nothing in window ({len(empty)}):** "
                          + ", ".join(empty))
-    if grouped:
+    fatal, degrading, escalated = split_by_severity(grouped, totals)
+    if escalated:
         lines.append(
-            f"- 🔴 **{error_count} ERROR line(s), {len(grouped)} distinct type(s)**"
+            "- 🔴 **Enrichment failed on more than a quarter of the items that"
+            " reached it.** That is a broken run, not a few thin items."
+        )
+    if fatal:
+        fatal_count = sum(c for _, c in fatal)
+        lines.append(
+            f"- 🔴 **{fatal_count} ERROR line(s), {len(fatal)} distinct type(s)**"
             ". The digest may be incomplete:"
         )
-        lines += [f"  - **{count}x** `{sig[:300]}`" for sig, count in grouped]
-    else:
+        lines += [f"  - **{count}x** `{sig[:300]}`" for sig, count in fatal]
+    if degrading:
+        degraded_count = sum(c for _, c in degrading)
+        lines.append(
+            f"- 🟡 **{degraded_count} item(s) published without background.**"
+            " Everything that cleared the bar is on the page; those items carry"
+            " a headline and a summary only:"
+        )
+        lines += [f"  - **{count}x** `{sig[:300]}`" for sig, count in degrading]
+    if not fatal and not degrading:
         lines.append(
             "- ✅ **No errors**. If the digest is empty, items scored"
             " below threshold."
@@ -332,14 +399,21 @@ def main() -> int:
                 f.write(separator + report)
             print(f"Appended health footer to {post}")
 
-    Path("health_errors.txt").write_text(str(len(errors)), encoding="utf-8")
+    fatal, degrading, escalated = split_by_severity(grouped, totals)
+    # Only errors that actually damage the run fail the job. Items that
+    # published thin are reported and stay green, so a red X keeps meaning
+    # "go and look" rather than "another Tuesday".
+    fatal_count = sum(c for _, c in fatal)
+    Path("health_errors.txt").write_text(str(fatal_count), encoding="utf-8")
     # Machine-readable form for notify_telegram.py, so the notifier doesn't
     # have to re-parse the log and the two can't disagree about a run.
     Path("health_summary.json").write_text(json.dumps({
         "totals": totals,
         "per_source": per_source,
         "zero_sources": sorted(n for n, c in per_source.items() if c == 0),
-        "errors": len(errors),
+        "errors": fatal_count,
+        "degraded": sum(c for _, c in degrading),
+        "degraded_escalated": escalated,
         "warnings": warnings,
         "posts": [str(p) for p in posts],
         "finished_utc": datetime.now(timezone.utc).strftime("%d %b %H:%M"),
