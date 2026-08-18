@@ -1,0 +1,24 @@
+---
+layout: default
+---
+<div class="theme-archive">
+
+  <p class="item-kicker">Theme</p>
+  <h1 class="item-title">{{ page.title }}</h1>
+  <p class="theme-question">{{ page.question }}</p>
+  <p class="theme-scope">{{ page.scope }}</p>
+
+  {% assign theme_items = site.items | where: "lang", "en" | where: "theme", page.theme_id | sort: "date" | reverse %}
+
+  {% if theme_items.size > 0 %}
+  <p class="theme-count">{{ theme_items.size }} item{% if theme_items.size != 1 %}s{% endif %} so far.</p>
+  <ul class="item-list">
+    {% for item in theme_items %}{% include item-row.html item=item %}{% endfor %}
+  </ul>
+  {% else %}
+  <p class="take-empty">Nothing has cleared this theme's bar yet. Items appear here from the next edition onwards.</p>
+  {% endif %}
+
+  <p class="theme-back"><a href="{{ '/' | relative_url }}">Back to the radar</a> <span aria-hidden="true">·</span> <a href="{{ '/method/' | relative_url }}">How items are scored</a></p>
+
+</div>

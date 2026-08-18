@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime, timezone
 
-from src.ai.summarizer import DailySummarizer
+from src.ai.summarizer import LABELS, DailySummarizer
 from src.models import (
     ArtifactSource,
     ClassificationResult,
@@ -469,3 +469,44 @@ def test_generate_summary_preserves_normal_http_links():
     assert "[Important Item 1](https://example.com/items/1)" in result
     assert "[Discussion](https://example.com/discuss?id=1#comments)" in result
     assert 'href="https://docs.example.com/path?q=one&amp;lang=en"' in result
+
+
+def test_render_item_body_drops_the_heading_and_the_closing_rule():
+    """An item's own page gets title, score and link from the layout.
+
+    The digest keeps them inline. Both come from the same renderer, so this
+    guards against the two drifting into different-looking items.
+    """
+    summarizer = DailySummarizer()
+    item = _make_item(1)
+
+    body = summarizer.render_item_body(item, "en")
+
+    assert not body.lstrip().startswith("<a id=")
+    assert "## " not in body
+    assert not body.rstrip().endswith("---")
+    assert "Summary for item 1." in body
+    assert "`#AI`" in body
+
+
+def test_render_item_body_keeps_what_the_digest_shows():
+    summarizer = DailySummarizer()
+    item = _make_item(2)
+
+    body = summarizer.render_item_body(item, "en")
+    digest_form = summarizer._format_item(item, LABELS["en"], "en", index=1)
+
+    for fragment in ("rss", "tester", "Summary for item 2."):
+        assert fragment in body
+        assert fragment in digest_form
+
+
+def test_item_slug_is_readable_and_bounded():
+    from src.orchestrator import HorizonOrchestrator
+
+    slug = HorizonOrchestrator._item_slug(
+        "FERC approves MISO cost recovery for transmission projects sited in PJM",
+        "fallback",
+    )
+    assert slug == "ferc-approves-miso-cost-recovery-for-transmission-projects-sited"
+    assert HorizonOrchestrator._item_slug("!!! ???", "item-practice-1") == "item-practice-1"

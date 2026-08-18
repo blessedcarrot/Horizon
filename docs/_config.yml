@@ -1,6 +1,6 @@
 # No theme: docs/_layouts/default.html is our own shell.
 title: NEWS-Radar
-description: "Early warning on AI and agentic AI — curated by Bruno Coelho"
+description: "Early warning on AI and agentic AI, curated by Bruno Coelho"
 baseurl: "" # served at the domain root, not a /Horizon subpath
 url: "https://radar.bcoelho.com" # custom domain; see docs/CNAME
 
@@ -19,6 +19,32 @@ collections:
   commentary:
     output: true
     permalink: /commentary/:name/
+  # One document per published item. The pipeline writes these alongside the
+  # digest so the site can lead with what was found rather than with a log of
+  # when it ran, and so a single item can be linked to on its own.
+  items:
+    output: true
+    permalink: /item/:name/
+
+# The reading order of the themes, and the question each one answers. Held here
+# rather than derived from the profiles, because the site needs the order even
+# on a day when a theme is empty.
+themes:
+  - id: critical-infrastructure
+    name: Critical Infrastructure
+    question: What would an operator do differently?
+  - id: reliability-assurance
+    name: Reliability &amp; Assurance
+    question: Who is exposed, and what should they check?
+  - id: business-markets
+    name: Business &amp; Markets
+    question: What changes commercially, and for whom?
+  - id: practice
+    name: Practice
+    question: What would a team do differently this quarter?
+  - id: horizon-research
+    name: Horizon
+    question: What would have to be true for this to matter?
 
 defaults:
   - scope:
@@ -31,3 +57,8 @@ defaults:
       type: "commentary"
     values:
       layout: "commentary"
+  - scope:
+      path: ""
+      type: "items"
+    values:
+      layout: "item"

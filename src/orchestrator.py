@@ -1,6 +1,8 @@
 """Main orchestrator coordinating the entire workflow."""
 
 import asyncio
+import json
+import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -354,6 +356,24 @@ class HorizonOrchestrator:
                     self.console.print(
                         f"{self.icons['document']} Copied {lang.upper()} summary "
                         f"to GitHub Pages: {dest_path}\n"
+                    )
+
+                    written = self._write_item_pages(
+                        summarizer,
+                        important_items,
+                        today=today,
+                        run_time=run_time,
+                        lang=lang,
+                        edition_url=(
+                            f"/{today[:4]}/{today[5:7]}/{today[8:10]}/"
+                            f"{run_time}-summary-{lang}.html"
+                        ),
+                        edition_title=f"{today} {now_utc.strftime('%H:%M')} UTC",
+                        published_at=now_utc,
+                    )
+                    self.console.print(
+                        f"{self.icons['document']} Wrote {written} {lang.upper()} "
+                        f"item page(s)\n"
                     )
                 except Exception as e:
                     self.console.print(
@@ -1034,6 +1054,87 @@ class HorizonOrchestrator:
         ai_client = create_ai_client(self.config.ai)
         analyzer = ContentAnalyzer(ai_client, self.profiles, console=self.console)
         await analyzer.analyze_batch(expanded)
+
+    @staticmethod
+    def _item_slug(title: str, fallback: str) -> str:
+        """A stable, readable filename fragment for an item's own page."""
+        slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+        slug = "-".join(slug.split("-")[:9])[:70].strip("-")
+        return slug or fallback
+
+    def _write_item_pages(
+        self,
+        summarizer: DailySummarizer,
+        items: List[ContentItem],
+        *,
+        today: str,
+        run_time: str,
+        lang: str,
+        edition_url: str,
+        edition_title: str,
+        published_at: datetime,
+    ) -> int:
+        """Write each published item as its own Jekyll document.
+
+        The digest is one markdown blob per run, which is why the site could
+        only ever lead with a log of runs. Giving every item a document lets
+        the homepage group by theme, gives each theme an archive, and gives an
+        item a permalink that can be linked to on its own.
+
+        A failure here costs the item pages and leaves the digest intact, so it
+        never takes the run down with it.
+        """
+        from pathlib import Path
+
+        items_dir = Path("docs/_items")
+        items_dir.mkdir(parents=True, exist_ok=True)
+        view = summarizer.build_view(items, lang)
+        written = 0
+
+        for group in view.groups:
+            for view_item in group.items:
+                item = view_item.item
+                try:
+                    body = summarizer.render_item_body(item, lang)
+                    slug = self._item_slug(view_item.title, view_item.anchor_id)
+                    name = f"{today}-{run_time}-{view_item.global_index:02d}-{slug}-{lang}.md"
+                    artifact = (
+                        item.processing.artifacts.get(lang)
+                        if item.processing
+                        else None
+                    )
+                    front = [
+                        "---",
+                        "layout: item",
+                        f"title: {json.dumps(view_item.title)}",
+                        f"date: {published_at.strftime('%Y-%m-%d %H:%M:%S %z')}",
+                        f"lang: {lang}",
+                        f"theme: {group.profile_id}",
+                        f"theme_name: {json.dumps(group.name)}",
+                        # Quoted: an item with no analysis scores "?", and a bare
+                        # "?" is not a valid YAML scalar.
+                        f"score: {json.dumps(view_item.score)}",
+                        f"link: {json.dumps(str(item.url))}",
+                        f"source: {json.dumps(self._sub_source_label(item))}",
+                        f"edition_url: {json.dumps(edition_url)}",
+                        f"edition_title: {json.dumps(edition_title)}",
+                        # An item whose second pass failed publishes with a
+                        # headline and no background. Say so in the data, so
+                        # the site can tell the two apart.
+                        f"enriched: {'true' if artifact else 'false'}",
+                        "---",
+                        "",
+                    ]
+                    dest = safe_output_path(items_dir, name)
+                    with open(dest, "w", encoding="utf-8") as f:
+                        f.write("\n".join(front) + body)
+                    written += 1
+                except Exception as exc:  # noqa: BLE001
+                    self.console.print(
+                        f"[yellow]{self.icons['warning']} Could not write item "
+                        f"page for {item.id}: {exc}[/yellow]"
+                    )
+        return written
 
     async def enrich_items(self, items: List[ContentItem]) -> EnrichmentBatchResult:
         """Enrich items with background knowledge (2nd AI pass).

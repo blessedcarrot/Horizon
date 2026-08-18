@@ -356,6 +356,8 @@ class DailySummarizer:
         anchor_id: Optional[str] = None,
         title_override: Optional[str] = None,
         score_override: float | str | None = None,
+        include_heading: bool = True,
+        include_rule: bool = True,
     ) -> str:
         """Format a single ContentItem into Markdown."""
         artifact = item.processing.artifacts.get(language) if item.processing else None
@@ -418,10 +420,16 @@ class DailySummarizer:
 
         title_link = f"[{title}]({url})" if url else title
 
-        lines = [
-            f'<a id="{anchor_id or f"item-{index}"}"></a>',
-            f"{'#' * heading_level} {title_link} \u2b50\ufe0f {score}/10",  # ⭐️
-        ]
+        lines = (
+            [
+                f'<a id="{anchor_id or f"item-{index}"}"></a>',
+                f"{'#' * heading_level} {title_link} \u2b50\ufe0f {score}/10",  # ⭐️
+            ]
+            if include_heading
+            # An item's own page puts the title, the score and the link in the
+            # layout, where they can carry markup a digest heading cannot.
+            else []
+        )
         if summary.strip():
             lines.extend(["", summary])
         if primary_content.strip():
@@ -460,10 +468,29 @@ class DailySummarizer:
             lines.append("")
             lines.append(f"**{labels['tags']}**: {tags_str}")
 
-        lines.append("")
-        lines.append("---")
+        if include_rule:
+            lines.append("")
+            lines.append("---")
 
-        return "\n".join(lines) + "\n\n"
+        return "\n".join(lines).lstrip("\n") + "\n\n"
+
+
+    def render_item_body(self, item: ContentItem, language: str) -> str:
+        """The body of an item's own page: everything below the title.
+
+        The same renderer the digest uses, with the heading and the closing
+        rule left off, so an item reads identically in both places and there is
+        one place to change how an item looks.
+        """
+        labels = LABELS.get(language, LABELS["en"])
+        return self._format_item(
+            item,
+            labels,
+            language,
+            index=1,
+            include_heading=False,
+            include_rule=False,
+        ).strip() + "\n"
 
     def _generate_empty_summary(self, date: str, total_fetched: int, labels: dict) -> str:
         """Generate summary when no high-scoring items were found."""
