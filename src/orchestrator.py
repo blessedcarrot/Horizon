@@ -31,9 +31,12 @@ from .scrapers.google_news import GoogleNewsScraper
 from .ai.client import create_ai_client
 from .ai.analyzer import ContentAnalyzer
 from .ai.summarizer import DailySummarizer
+from .ai.synthesis import synthesise
 from .ai.enricher import ContentEnricher, EnrichmentBatchResult
 from .ai.tokens import get_usage_snapshot
 from .processing import ProfileRegistry
+from .selection import SelectionSettings, to_candidates
+from .selection import select as run_selection
 
 
 _TRACKING_QUERY_PARAMETERS = {
@@ -275,11 +278,17 @@ class HorizonOrchestrator:
                 f"{self.icons['ai']} Analyzed {len(analyzed_items)} items with AI\n"
             )
 
-            # 5. Filter, deduplicate, and balance the digest
-            filtering_result = await self.select_digest_items(
-                analyzed_items,
-            )
-            important_items = filtering_result.items
+            # 5. Choose the edition. Ranking when selection is enabled, the
+            # original score threshold otherwise.
+            if self.config.selection.enabled:
+                important_items, _selection = await self.select_by_ranking(
+                    analyzed_items
+                )
+            else:
+                filtering_result = await self.select_digest_items(
+                    analyzed_items,
+                )
+                important_items = filtering_result.items
 
             # Show per-sub-source selection breakdown
             selected_counts: Dict[str, int] = defaultdict(int)
@@ -292,6 +301,25 @@ class HorizonOrchestrator:
 
             # 6. Search related stories + enrich with background knowledge (2nd AI pass)
             await self.enrich_items(important_items)
+
+            # 6b. Synthesise the edition. One call over the whole selected set,
+            # which is the only stage that reads the items as a group.
+            preamble = None
+            if self.config.digest.synthesis_enabled and important_items:
+                self.console.print(
+                    f"{self.icons['summary']} Synthesising the edition..."
+                )
+                preamble = await synthesise(
+                    important_items,
+                    create_ai_client(self.config.ai),
+                    model=self.config.digest.synthesis_model,
+                )
+                if preamble:
+                    self.console.print(
+                        f"   Wrote a {len(preamble.split())}-word opening\n"
+                    )
+                else:
+                    self.console.print("   [yellow]No opening written[/yellow]\n")
 
             # 7. Generate and save daily summaries for each configured language
             now_utc = datetime.now(timezone.utc)
@@ -306,7 +334,13 @@ class HorizonOrchestrator:
                     profile_names=self.profiles.names,
                     profile_order=self.config.digest.profile_order,
                 )
-                summary = await summarizer.generate_summary(important_items, today, len(all_items), language=lang)
+                summary = await summarizer.generate_summary(
+                    important_items,
+                    today,
+                    len(all_items),
+                    language=lang,
+                    preamble=preamble,
+                )
 
                 # Save to data/summaries/
                 summary_path = self.storage.save_daily_summary(today, summary, language=lang)
@@ -818,6 +852,71 @@ class HorizonOrchestrator:
             topic_dedup_removed=topic_dedup_removed,
             balanced_digest=balanced_digest,
         )
+
+    def _selection_settings(self) -> SelectionSettings:
+        config = self.config.selection
+        return SelectionSettings(
+            gate_model=config.gate_model,
+            rank_model=config.rank_model,
+            defend_model=config.defend_model,
+            gate_effort=config.gate_effort,
+            rank_effort=config.rank_effort,
+            defend_effort=config.defend_effort,
+            gate_batch_size=config.gate_batch_size,
+            rank_chunk_size=config.rank_chunk_size,
+            rank_carry=config.rank_carry,
+            consider=config.consider,
+            max_publish=config.max_publish,
+            defend_concurrency=config.defend_concurrency,
+            use_batch=config.use_batch,
+        )
+
+    def _theme_questions(self) -> Dict[str, str]:
+        """Each theme's own question, taken from its profile, for the prompts."""
+        questions = {}
+        for profile_id in self.config.processing.profile_settings:
+            try:
+                profile = self.profiles.get(profile_id)
+            except Exception:
+                continue
+            questions[profile_id] = (profile.analysis_prompt or "").strip()[:600]
+        return questions
+
+    async def select_by_ranking(
+        self, items: List[ContentItem]
+    ) -> tuple[List[ContentItem], object]:
+        """Choose the edition by comparative ranking rather than by threshold.
+
+        Returns the selected items in rank order, plus the selection result for
+        reporting. Items keep their pipeline identity: selection works on its own
+        Candidate type and the ids map back here, which is what keeps the module
+        free of engine imports.
+        """
+        candidates = to_candidates(items)
+        result = await run_selection(
+            candidates,
+            create_ai_client(self.config.ai),
+            self._theme_questions(),
+            self._selection_settings(),
+        )
+
+        by_id = {item.id: item for item in items}
+        selected: List[ContentItem] = []
+        for candidate in result.selected:
+            item = by_id.get(candidate.id)
+            if item is None:
+                continue
+            # Record the theme the gate chose so the digest can group by it.
+            if candidate.theme and item.processing:
+                item.processing.classification.profile = candidate.theme
+            selected.append(item)
+
+        self.console.print(
+            f"{self.icons['filter']} Selection: {result.gate_kept} kept of "
+            f"{len(items)}, {len(result.ranked_ids)} ranked, "
+            f"{len(selected)} published\n"
+        )
+        return selected, result
 
     async def select_digest_items(
         self,

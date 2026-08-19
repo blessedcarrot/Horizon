@@ -94,3 +94,82 @@ def test_unknown_extractor_name_ignored() -> None:
 
     assert len(items) == 1
     assert items[0].content == "Short summary from feed."
+
+
+_MULTI_FEED = """<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"><channel><title>Busy</title>
+  <item><guid>e-1</guid><title>Oldest</title><link>https://example.com/1</link>
+    <pubDate>Fri, 24 Apr 2026 01:00:00 GMT</pubDate><description>a</description></item>
+  <item><guid>e-2</guid><title>Middle</title><link>https://example.com/2</link>
+    <pubDate>Fri, 24 Apr 2026 05:00:00 GMT</pubDate><description>b</description></item>
+  <item><guid>e-3</guid><title>Newest</title><link>https://example.com/3</link>
+    <pubDate>Fri, 24 Apr 2026 09:00:00 GMT</pubDate><description>c</description></item>
+</channel></rss>
+"""
+
+
+def _fetch(source: RSSSourceConfig, feed_text: str = _MULTI_FEED):
+    scraper = RSSScraper([source], _make_feed_client(feed_text))
+    return asyncio.run(scraper.fetch(_SINCE))
+
+
+def test_max_items_keeps_the_newest_entries() -> None:
+    source = RSSSourceConfig(
+        name="Busy", url="https://example.com/feed.xml", max_items=2
+    )
+    items = _fetch(source)
+    assert [item.title for item in items] == ["Newest", "Middle"]
+
+
+def test_max_items_unset_returns_everything() -> None:
+    source = RSSSourceConfig(name="Busy", url="https://example.com/feed.xml")
+    items = _fetch(source)
+    assert len(items) == 3
+
+
+def test_max_items_larger_than_feed_is_harmless() -> None:
+    source = RSSSourceConfig(
+        name="Busy", url="https://example.com/feed.xml", max_items=99
+    )
+    assert len(_fetch(source)) == 3
+
+
+def test_max_items_counts_in_window_items_not_raw_entries() -> None:
+    """Three entries exist; only two are in window, and the cap applies to those."""
+    late_since = datetime(2026, 4, 24, 4, 0, tzinfo=timezone.utc)
+    source = RSSSourceConfig(
+        name="Busy", url="https://example.com/feed.xml", max_items=1
+    )
+    scraper = RSSScraper([source], _make_feed_client(_MULTI_FEED))
+    items = asyncio.run(scraper.fetch(late_since))
+    assert [item.title for item in items] == ["Newest"]
+
+
+def test_uncapped_order_is_left_as_the_feed_had_it() -> None:
+    """Recency ordering is a consequence of capping, not a promise of the scraper.
+
+    Pinning this so a later change that always sorts is a deliberate decision
+    rather than an accident.
+    """
+    late_since = datetime(2026, 4, 24, 4, 0, tzinfo=timezone.utc)
+    source = RSSSourceConfig(name="Busy", url="https://example.com/feed.xml")
+    scraper = RSSScraper([source], _make_feed_client(_MULTI_FEED))
+    items = asyncio.run(scraper.fetch(late_since))
+    assert [item.title for item in items] == ["Middle", "Newest"]
+
+
+def test_max_items_rejects_zero() -> None:
+    import pytest
+
+    with pytest.raises(Exception):
+        RSSSourceConfig(name="Busy", url="https://example.com/f.xml", max_items=0)
+
+
+def test_capped_feed_still_reports_its_attempted_count() -> None:
+    """The health footer counts what a feed contributed, which is the capped number."""
+    source = RSSSourceConfig(
+        name="Busy", url="https://example.com/feed.xml", max_items=1
+    )
+    scraper = RSSScraper([source], _make_feed_client(_MULTI_FEED))
+    asyncio.run(scraper.fetch(_SINCE))
+    assert scraper.attempted_counts == {"Busy": 1}

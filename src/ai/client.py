@@ -1,8 +1,10 @@
 """AI client abstraction supporting multiple providers."""
 
+import asyncio
 import os
 import re
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 from openai import AsyncAzureOpenAI, AsyncOpenAI
 from anthropic import AsyncAnthropic
@@ -99,6 +101,10 @@ class AIClient(ABC):
         user: str,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
+        *,
+        model: Optional[str] = None,
+        schema: Optional[Dict[str, Any]] = None,
+        effort: Optional[str] = None,
     ) -> str:
         """Generate completion from AI model.
 
@@ -107,6 +113,9 @@ class AIClient(ABC):
             user: User prompt
             temperature: Optional sampling temperature override
             max_tokens: Optional maximum tokens override
+            model: Optional per-call model override, for per-stage model tiering
+            schema: Optional JSON Schema constraining the response
+            effort: Optional reasoning effort, one of low/medium/high/xhigh/max
 
         Returns:
             str: Generated completion text
@@ -136,35 +145,47 @@ class AnthropicClient(AIClient):
         self.temperature = config.temperature
         self.max_tokens = config.max_tokens
 
-    async def complete(
+    def build_params(
         self,
         system: str,
         user: str,
+        *,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
-    ) -> str:
-        """Generate completion using Claude.
+        model: Optional[str] = None,
+        schema: Optional[Dict[str, Any]] = None,
+        effort: Optional[str] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """Build one request body, shared by the live and batch paths.
 
-        Args:
-            system: System prompt
-            user: User prompt
-            temperature: Sampling temperature
-            max_tokens: Maximum tokens to generate
-
-        Returns:
-            str: Generated text
+        Kept separate so the batch path cannot drift from the live one, and so
+        request shaping is testable without a network call.
         """
-        temperature = self.temperature if temperature is None else temperature
-        max_tokens = self.max_tokens if max_tokens is None else max_tokens
+        params: Dict[str, Any] = {
+            "model": model or self.model,
+            "max_tokens": self.max_tokens if max_tokens is None else max_tokens,
+            "temperature": self.temperature if temperature is None else temperature,
+            "system": system,
+            "messages": [{"role": "user", "content": user}],
+            "thinking": {"type": "disabled"},
+        }
 
-        message = await self.client.messages.create(
-            model=self.model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-            thinking={"type": "disabled"},
-        )
+        # `output_config` carries both the response format and the effort level,
+        # so build it once rather than setting the key twice.
+        output_config: Dict[str, Any] = {}
+        if schema is not None:
+            output_config["format"] = {"type": "json_schema", "schema": schema}
+        if effort is not None:
+            output_config["effort"] = effort
+        if output_config:
+            params["output_config"] = output_config
+        if tools:
+            params["tools"] = tools
+
+        return params
+
+    def _record(self, message: Any) -> None:
         usage = getattr(message, "usage", None)
         if usage is not None:
             record_usage(
@@ -172,7 +193,196 @@ class AnthropicClient(AIClient):
                 input_tokens=getattr(usage, "input_tokens", 0),
                 output_tokens=getattr(usage, "output_tokens", 0),
             )
-        return message.content[0].text
+
+    @staticmethod
+    def _last_text(message: Any) -> str:
+        """Return the final text block.
+
+        With server-side tools the model narrates between tool calls, so the
+        answer is the last text block rather than the first. Taking the first
+        would return a preamble like "let me search for that".
+        """
+        texts = [
+            block.text
+            for block in message.content
+            if getattr(block, "type", None) == "text"
+        ]
+        if not texts:
+            raise ValueError("Response contained no text block")
+        return texts[-1]
+
+    @staticmethod
+    def _first_text(message: Any) -> str:
+        """Return the first text block, skipping any non-text blocks.
+
+        Indexing content[0] blindly is what broke this client on Sonnet 5, whose
+        first block was a ThinkingBlock. Thinking is disabled here, but a server
+        tool result can also lead the list, so select by type rather than position.
+        """
+        for block in message.content:
+            if getattr(block, "type", None) == "text":
+                return block.text
+        raise ValueError("Response contained no text block")
+
+    async def complete(
+        self,
+        system: str,
+        user: str,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        *,
+        model: Optional[str] = None,
+        schema: Optional[Dict[str, Any]] = None,
+        effort: Optional[str] = None,
+    ) -> str:
+        """Generate completion using Claude."""
+        message = await self.client.messages.create(
+            **self.build_params(
+                system,
+                user,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                model=model,
+                schema=schema,
+                effort=effort,
+            )
+        )
+        self._record(message)
+        return self._first_text(message)
+
+    async def complete_with_tools(
+        self,
+        system: str,
+        user: str,
+        tools: List[Dict[str, Any]],
+        *,
+        model: Optional[str] = None,
+        schema: Optional[Dict[str, Any]] = None,
+        effort: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        max_continuations: int = 4,
+    ) -> str:
+        """Run a completion with server-side tools, resuming if the turn pauses.
+
+        Server tools run on Anthropic's side, so there is no execution loop here.
+        There is still a continuation loop: a long tool-using turn can stop with
+        `pause_turn`, and a caller that ignores that gets a silently truncated
+        answer with no error raised.
+        """
+        params = self.build_params(
+            system,
+            user,
+            max_tokens=max_tokens,
+            model=model,
+            schema=schema,
+            effort=effort,
+            tools=tools,
+        )
+        messages = list(params["messages"])
+
+        for _ in range(max_continuations + 1):
+            params["messages"] = messages
+            message = await self.client.messages.create(**params)
+            self._record(message)
+            if getattr(message, "stop_reason", None) != "pause_turn":
+                return self._last_text(message)
+            # Re-send the paused turn so the server picks up where it stopped.
+            messages = messages + [{"role": "assistant", "content": message.content}]
+
+        logger.warning("Tool turn still paused after %d continuations", max_continuations)
+        return self._last_text(message)
+
+    async def complete_batch(
+        self,
+        requests: List["BatchRequest"],
+        *,
+        poll_seconds: float = 20.0,
+        max_wait_seconds: float = 3600.0,
+    ) -> Dict[str, str]:
+        """Run many independent completions through the Batch API at half price.
+
+        Suited to scheduled work with no latency requirement: the radar runs once
+        a day and its per-item stages are mutually independent, so an hour of
+        latency costs nothing and the discount is free.
+
+        Returns a mapping of `custom_id` to text. Failed or expired entries are
+        omitted rather than raising, so one bad item cannot lose a whole run; the
+        caller compares the returned keys against what it submitted.
+        """
+        if not requests:
+            return {}
+
+        batch = await self.client.messages.batches.create(
+            requests=[
+                {
+                    "custom_id": request.custom_id,
+                    "params": self.build_params(
+                        request.system,
+                        request.user,
+                        max_tokens=request.max_tokens,
+                        model=request.model,
+                        schema=request.schema,
+                        effort=request.effort,
+                    ),
+                }
+                for request in requests
+            ]
+        )
+
+        waited = 0.0
+        while True:
+            current = await self.client.messages.batches.retrieve(batch.id)
+            if current.processing_status == "ended":
+                break
+            if waited >= max_wait_seconds:
+                raise BatchNotReady(
+                    f"Batch {batch.id} still {current.processing_status} after "
+                    f"{int(waited)}s"
+                )
+            await asyncio.sleep(poll_seconds)
+            waited += poll_seconds
+
+        # Results come back in arbitrary order, so key by custom_id. Collecting
+        # by position is the classic way to silently mis-assign every result.
+        collected: Dict[str, str] = {}
+        async for entry in await self.client.messages.batches.results(batch.id):
+            if entry.result.type != "succeeded":
+                logger.warning(
+                    "Batch entry %s did not succeed: %s",
+                    entry.custom_id,
+                    entry.result.type,
+                )
+                continue
+            message = entry.result.message
+            self._record(message)
+            try:
+                collected[entry.custom_id] = self._first_text(message)
+            except ValueError:
+                logger.warning("Batch entry %s returned no text", entry.custom_id)
+
+        missing = {r.custom_id for r in requests} - set(collected)
+        if missing:
+            logger.warning(
+                "Batch %s returned %d of %d results", batch.id, len(collected), len(requests)
+            )
+        return collected
+
+
+@dataclass(frozen=True)
+class BatchRequest:
+    """One unit of work for the Batch API, addressed by `custom_id`."""
+
+    custom_id: str
+    system: str
+    user: str
+    schema: Optional[Dict[str, Any]] = None
+    effort: Optional[str] = None
+    model: Optional[str] = None
+    max_tokens: Optional[int] = None
+
+
+class BatchNotReady(RuntimeError):
+    """A batch did not finish inside the allotted wait."""
 
 
 class OpenAIClient(AIClient):
