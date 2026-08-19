@@ -21,10 +21,14 @@ Effects:
 
 import argparse
 import json
+import os
 import re
 import sys
-from datetime import datetime, timezone
+import urllib.error
+import urllib.request
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Optional
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 # Downloaded Actions job logs prefix every line with an ISO timestamp that raw
@@ -75,7 +79,7 @@ def parse_log(path: Path):
     per_feed: dict[str, tuple[int, bool]] = {}
     totals = {
         "fetched": None, "merged": None, "analyzed": None, "selected": None,
-        "topic_dupes": None, "published": None,
+        "topic_dupes": None, "published": None, "pre_cap": None,
         "enriched": None, "enrich_attempted": None,
         "tokens": None, "tokens_in": None, "tokens_out": None,
     }
@@ -109,6 +113,7 @@ def parse_log(path: Path):
             totals["topic_dupes"] = int(m.group(1))
         elif m := BALANCED_RE.search(line):
             totals["published"] = int(m.group(1))
+            totals["pre_cap"] = int(m.group(2))
         elif m := ENRICHED_RE.search(line):
             totals["enriched"] = int(m.group(1))
             totals["enrich_attempted"] = int(m.group(2))
@@ -192,7 +197,8 @@ def annotate(level: str, message: str) -> None:
     print(f"::{level}::{clean}")
 
 
-def emit_annotations(per_source, per_feed, totals, grouped, warnings) -> None:
+def emit_annotations(per_source, per_feed, totals, grouped, warnings,
+                     cadence=None, cadence_gap=False) -> None:
     headline = (
         f"Radar run: {funnel(totals).replace('**', '')}. "
         f"{sum(c for _, c in grouped)} errors, {warnings} warnings"
@@ -203,6 +209,12 @@ def emit_annotations(per_source, per_feed, totals, grouped, warnings) -> None:
 
     if note := enrichment_note(totals):
         annotate("warning", note.lstrip("- ").replace("**", ""))
+
+    for line in cadence or []:
+        if line.startswith("- 🔴"):
+            annotate("error", line.lstrip("- 🔴").replace("**", "").strip())
+        elif line.startswith("- 🟡"):
+            annotate("warning", line.lstrip("- 🟡").replace("**", "").strip())
 
     if zero := sorted(n for n, c in per_source.items() if c == 0):
         annotate(
@@ -256,6 +268,13 @@ def funnel(totals) -> str:
         steps.append(f"{totals['selected']} cleared threshold")
     if totals["topic_dupes"]:
         steps.append(f"{totals['topic_dupes']} topic duplicates merged")
+    # The digest cap is a stage like any other and hides the biggest drop of
+    # all when it bites: on 2026-08-18 it cut 45 qualifying items to 24, and
+    # the footer showed only the 24.
+    if totals.get("pre_cap") and totals["published"] is not None:
+        held = totals["pre_cap"] - totals["published"]
+        if held > 0:
+            steps.append(f"{held} held back by the digest cap")
     if totals["published"] is not None:
         steps.append(f"**{totals['published']} published**")
     return " → ".join(steps)
@@ -278,7 +297,7 @@ def enrichment_note(totals):
     )
 
 
-def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
+def build_report(per_source, per_feed, totals, grouped, warnings, cadence=None) -> str:
     zero_sources = sorted(n for n, c in per_source.items() if c == 0)
     fatal_head, degrading_head, _ = split_by_severity(grouped, totals)
     lines = ["## Run health", ""]
@@ -295,6 +314,7 @@ def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
             f" ({totals['tokens_in']:,} in / {totals['tokens_out']:,} out)"
         )
     lines.append(tail)
+    lines += cadence or []
     if note := enrichment_note(totals):
         lines.append(note)
     if per_source:
@@ -347,6 +367,86 @@ def build_report(per_source, per_feed, totals, grouped, warnings) -> str:
     return "\n".join(lines) + "\n"
 
 
+# GitHub's scheduler is best effort and has been between 29 and 104 minutes
+# late on this repo. The window is anchored to when a run starts, not to the
+# cron time, so what threatens coverage is the gap between consecutive starts
+# growing past the window. Warn while there is still headroom.
+CADENCE_WARN_HEADROOM_HOURS = 1.0
+
+
+def _api(url: str, token: Optional[str]):
+    request = urllib.request.Request(url, headers={
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "horizon-run-health",
+    })
+    if token:
+        request.add_header("Authorization", f"Bearer {token}")
+    with urllib.request.urlopen(request, timeout=20) as response:
+        return json.load(response)
+
+
+def cadence_lines(starts: list[datetime], window_hours: float) -> tuple[list[str], bool]:
+    """Compare the gap between the last two scheduled starts against the window.
+
+    `starts` is newest first. Returns the report lines and whether the gap has
+    actually exceeded the window, which means items fell between two runs and
+    nothing will ever pick them up.
+    """
+    if len(starts) < 2:
+        return (["- **Cadence:** first scheduled run on this schedule, no gap to"
+                 " compare yet."], False)
+
+    gap = starts[0] - starts[1]
+    gap_hours = gap.total_seconds() / 3600
+    headroom = window_hours - gap_hours
+    shape = f"{gap_hours:.1f}h since the previous scheduled run, window is {window_hours:g}h"
+
+    if headroom < 0:
+        return ([
+            f"- 🔴 **Cadence: {shape}.** The gap is wider than the window, so"
+            f" items published in the missing {abs(headroom):.1f}h were never"
+            " fetched by either run."
+        ], True)
+    if headroom < CADENCE_WARN_HEADROOM_HOURS:
+        return ([
+            f"- 🟡 **Cadence: {shape}**, leaving {headroom:.1f}h of overlap."
+            " Scheduler drift is eating the margin; a longer delay next run"
+            " would open a gap."
+        ], False)
+    return ([f"- **Cadence:** {shape}, {headroom:.1f}h of overlap."], False)
+
+
+def check_cadence(window_hours: float) -> tuple[list[str], bool]:
+    """Read the last two scheduled starts from the API.
+
+    Never fails the run on its own account: a rate limit or an outage here is
+    not a reason to lose a digest, so any error degrades to a note.
+    """
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    workflow = os.environ.get("GITHUB_WORKFLOW_REF", "")
+    token = os.environ.get("GITHUB_TOKEN")
+    if not repo:
+        return [], False
+    # GITHUB_WORKFLOW_REF is "owner/repo/.github/workflows/f.yml@refs/heads/main".
+    # The ref after the @ contains slashes, so strip it before taking the
+    # basename or this lands on "main" and the check silently does nothing.
+    workflow_file = workflow.split("@")[0].split("/")[-1] if workflow else ""
+    if not workflow_file:
+        return [], False
+    url = (f"https://api.github.com/repos/{repo}/actions/workflows/"
+           f"{workflow_file}/runs?event=schedule&per_page=5")
+    try:
+        payload = _api(url, token)
+        starts = [
+            datetime.fromisoformat(r["run_started_at"].replace("Z", "+00:00"))
+            for r in payload.get("workflow_runs", [])
+        ]
+    except (urllib.error.URLError, KeyError, ValueError, TimeoutError) as exc:
+        return [f"- **Cadence:** could not be checked ({type(exc).__name__})."], False
+    starts.sort(reverse=True)
+    return cadence_lines(starts, window_hours)
+
+
 def todays_posts(posts_dir: Path) -> list[Path]:
     """This run's digest file(s), the newest per language for today.
 
@@ -375,13 +475,25 @@ def main() -> int:
     ap.add_argument("logfile", type=Path)
     ap.add_argument("--append-digest", type=Path, default=None,
                     help="posts dir; appends footer to today's summary files")
+    ap.add_argument("--window-hours", type=float, default=None,
+                    help="the run's --hours window; enables the cadence check")
     args = ap.parse_args()
 
     per_source, per_feed, totals, errors, warnings = parse_log(args.logfile)
     grouped = group_errors(errors)
-    report = build_report(per_source, per_feed, totals, grouped, warnings)
+
+    cadence, cadence_gap = ([], False)
+    if args.window_hours:
+        cadence, cadence_gap = check_cadence(args.window_hours)
+
+    report = build_report(
+        per_source, per_feed, totals, grouped, warnings, cadence=cadence
+    )
     print(report)
-    emit_annotations(per_source, per_feed, totals, grouped, warnings)
+    emit_annotations(
+        per_source, per_feed, totals, grouped, warnings,
+        cadence=cadence, cadence_gap=cadence_gap,
+    )
 
     import os
     if summary_path := os.environ.get("GITHUB_STEP_SUMMARY"):
@@ -404,6 +516,10 @@ def main() -> int:
     # published thin are reported and stay green, so a red X keeps meaning
     # "go and look" rather than "another Tuesday".
     fatal_count = sum(c for _, c in fatal)
+    # A gap wider than the window means items existed and no run ever saw them.
+    # That is lost coverage rather than lost depth, so it goes red.
+    if cadence_gap:
+        fatal_count += 1
     Path("health_errors.txt").write_text(str(fatal_count), encoding="utf-8")
     # Machine-readable form for notify_telegram.py, so the notifier doesn't
     # have to re-parse the log and the two can't disagree about a run.

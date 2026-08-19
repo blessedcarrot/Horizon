@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # needed to commit changes
+      actions: read    # the health check reads previous run start times
 
     steps:
       - name: Checkout code
@@ -57,7 +58,14 @@ jobs:
           uv run horizon --hours 26 2>&1 | tee horizon-run.log
 
       - name: "Run health check (BACKLOG #5/#6 - distinguish quiet from broken)"
-        run: python scripts/check_run_health.py horizon-run.log --append-digest docs/_posts
+        env:
+          # Lets the check read the previous scheduled run's start time, so it
+          # can compare the gap between runs against the window below.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/check_run_health.py horizon-run.log \
+            --append-digest docs/_posts \
+            --window-hours 26
 
       - name: Set current date as environment variable
         run: echo "DATE=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_ENV
