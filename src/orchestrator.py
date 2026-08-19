@@ -881,6 +881,58 @@ class HorizonOrchestrator:
         score = item.processing.analysis.score
         return score is not None and score >= effective_threshold
 
+    def _reserve_profile_slots(
+        self,
+        selected: List[tuple[ContentItem, str]],
+        profile_limits: Dict[str, int],
+        max_items: Optional[int],
+    ) -> List[tuple[ContentItem, str]]:
+        """Fill each profile's reserved slots first, then backfill by score.
+
+        `selected` arrives sorted by score, so taking the first N of a profile
+        takes its best N. Profiles with no configured limit take part only in
+        the backfill. Unused slots are given back, so a day when a theme finds
+        nothing produces a full edition rather than a short one.
+        """
+        taken: Dict[str, int] = defaultdict(int)
+        reserved: List[tuple[ContentItem, str]] = []
+        spare: List[tuple[ContentItem, str]] = []
+
+        for entry in selected:
+            profile_id = (
+                entry[0].processing.classification.profile
+                if entry[0].processing and entry[0].processing.classification
+                else self.profiles.default_profile
+            )
+            limit = profile_limits.get(profile_id)
+            if limit is not None and taken[profile_id] < limit:
+                taken[profile_id] += 1
+                reserved.append(entry)
+            else:
+                spare.append(entry)
+
+        if max_items is None:
+            kept = reserved + spare
+        else:
+            # Reserved items keep their places even past the cap: a guarantee
+            # that a global cut can overturn is not a guarantee.
+            room = max_items - len(reserved)
+            kept = reserved + (spare[:room] if room > 0 else [])
+
+        # Hand back a score-ordered list, which is what every stage downstream
+        # assumes, including the order items appear in within a theme.
+        return sorted(
+            kept,
+            key=lambda entry: (
+                entry[0].processing.analysis.score
+                if entry[0].processing
+                and entry[0].processing.analysis
+                and entry[0].processing.analysis.score is not None
+                else -1
+            ),
+            reverse=True,
+        )
+
     def apply_balanced_digest(
         self,
         items: List[ContentItem],
@@ -896,8 +948,9 @@ class HorizonOrchestrator:
         digest = self.config.digest
         groups = digest.category_groups
         max_items = digest.max_items
+        profile_limits = digest.profile_limits
 
-        if not groups and max_items is None:
+        if not groups and max_items is None and not profile_limits:
             return BalancedDigestResult(items=items)
 
         sorted_items = sorted(
@@ -951,7 +1004,16 @@ class HorizonOrchestrator:
             selected.append((item, group_key))
             group_counts[group_key] += 1
 
-        if max_items is not None:
+        # Reserve each profile its slots before the global cut. The cut is by
+        # score across every profile, so without this a theme publishing at 7.0
+        # takes the whole edition and a theme whose bar is 6.5 never appears,
+        # however many of its items cleared. Seen on 2026-08-18: 24 of 24
+        # published items came from one theme while two themes showed nothing.
+        if profile_limits:
+            selected = self._reserve_profile_slots(
+                selected, profile_limits, max_items
+            )
+        elif max_items is not None:
             selected = selected[:max_items]
 
         final_counts: Dict[str, int] = defaultdict(int)

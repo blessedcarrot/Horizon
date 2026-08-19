@@ -410,7 +410,7 @@
         ]
       },
       {
-        "name": "Google News — AI & energy",
+        "name": "Google News \u2014 AI & energy",
         "url": "https://news.google.com/rss/search?q=AI%20AND%20%28utility%20OR%20%22power%20grid%22%20OR%20%22energy%20transition%22%20OR%20%22data%20center%20power%22%20OR%20electricity%29&hl=en-US&gl=US&ceid=US:en",
         "enabled": true,
         "category": "energy-infra",
@@ -432,7 +432,7 @@
         ]
       },
       {
-        "name": "IEEE Spectrum — AI",
+        "name": "IEEE Spectrum \u2014 AI",
         "url": "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
         "enabled": true,
         "category": "media",
@@ -601,7 +601,14 @@
     ],
     "category_groups": {},
     "default_group": "other",
-    "default_group_limit": null
+    "default_group_limit": null,
+    "profile_limits": {
+      "critical-infrastructure": 6,
+      "reliability-assurance": 6,
+      "business-markets": 5,
+      "practice": 4,
+      "horizon-research": 3
+    }
   },
   "webhook": {
     "enabled": false,

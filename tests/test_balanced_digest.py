@@ -362,3 +362,82 @@ def test_run_balances_after_twitter_reanalysis(tmp_path, monkeypatch) -> None:
     asyncio.run(orchestrator.run())
 
     assert enriched_ids == ["second"]
+
+
+def make_profiled_item(item_id: str, score: float, profile: str) -> ContentItem:
+    """An item routed to a theme, which is what profile_limits works on.
+
+    make_item above keys off metadata["category"], the source's own label. The
+    two are unrelated, and conflating them is why the category quotas could
+    never express "at most N items from this theme".
+    """
+    item = make_item(item_id, score, None)
+    item.profile = profile
+    item.processing.classification = ClassificationResult(
+        profile=profile, method="ai_match"
+    )
+    return item
+
+
+def _profiles_of(result) -> list[str]:
+    return [item.processing.classification.profile for item in result.items]
+
+
+def test_profile_limits_stop_one_theme_taking_the_whole_digest() -> None:
+    """Reproduces the 2026-08-18 edition.
+
+    45 items cleared their thresholds, max_items cut the list at 24 by score
+    across every theme, and all 24 came from reliability-assurance because its
+    items score 7.0 while critical-infrastructure's bar is 6.5. Two themes
+    published nothing.
+    """
+    items = [
+        make_profiled_item(f"rel-{i}", 7.0, "reliability-assurance")
+        for i in range(40)
+    ] + [
+        make_profiled_item(f"infra-{i}", 6.5, "critical-infrastructure")
+        for i in range(3)
+    ] + [
+        make_profiled_item(f"biz-{i}", 6.6, "business-markets") for i in range(2)
+    ]
+
+    without = make_orchestrator(DigestConfig(max_items=24)).apply_balanced_digest(items)
+    assert set(_profiles_of(without)) == {"reliability-assurance"}, (
+        "guard: without profile_limits one theme still takes everything"
+    )
+
+    with_limits = make_orchestrator(
+        DigestConfig(
+            max_items=24,
+            profile_limits={
+                "critical-infrastructure": 6,
+                "reliability-assurance": 6,
+                "business-markets": 6,
+            },
+        )
+    ).apply_balanced_digest(items)
+
+    counts = {p: _profiles_of(with_limits).count(p) for p in set(_profiles_of(with_limits))}
+    assert counts["critical-infrastructure"] == 3   # all it had
+    assert counts["business-markets"] == 2          # all it had
+    assert counts["reliability-assurance"] == 19    # 6 reserved + 13 backfilled
+    assert len(with_limits.items) == 24             # unused slots given back
+
+
+def test_profile_limits_keep_the_result_sorted_by_score() -> None:
+    items = [
+        make_profiled_item("rel-top", 9.0, "reliability-assurance"),
+        make_profiled_item("infra-low", 6.5, "critical-infrastructure"),
+        make_profiled_item("rel-mid", 8.0, "reliability-assurance"),
+    ]
+    result = make_orchestrator(
+        DigestConfig(max_items=3, profile_limits={"critical-infrastructure": 1})
+    ).apply_balanced_digest(items)
+
+    scores = [i.processing.analysis.score for i in result.items]
+    assert scores == sorted(scores, reverse=True)
+
+
+def test_profile_limits_reject_a_zero_slot() -> None:
+    with pytest.raises(ValidationError):
+        DigestConfig(profile_limits={"practice": 0})

@@ -588,6 +588,24 @@ class DigestConfig(BaseModel):
     default_group: str = "other"
     default_group_limit: Optional[int] = Field(default=None, gt=0)
     profile_order: List[str] = Field(default_factory=list)
+    # Guaranteed slots per profile. Without these, max_items truncates a list
+    # sorted by score across every profile, so a high-volume theme with a
+    # higher bar crowds out a low-volume theme with a lower one, and the
+    # per-profile thresholds stop meaning anything. Unused slots are backfilled
+    # by score, so a quiet theme does not shorten the edition.
+    profile_limits: Dict[str, int] = Field(default_factory=dict)
+
+    @field_validator("profile_limits")
+    @classmethod
+    def validate_profile_limits(cls, value: Dict[str, int]) -> Dict[str, int]:
+        for profile_id, limit in value.items():
+            if not profile_id.strip():
+                raise ValueError("digest.profile_limits keys must be non-empty")
+            if limit < 1:
+                raise ValueError(
+                    f"digest.profile_limits['{profile_id}'] must be at least 1"
+                )
+        return value
 
     @field_validator("profile_order")
     @classmethod
