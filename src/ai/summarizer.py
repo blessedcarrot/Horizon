@@ -213,6 +213,7 @@ class DailySummarizer:
         date: str,
         total_fetched: int,
         language: str = "en",
+        preamble: Optional[str] = None,
     ) -> str:
         """Generate daily summary in Markdown format.
 
@@ -235,8 +236,13 @@ class DailySummarizer:
         header = (
             f"# {labels['header']} - {date}\n\n"
             f"> {labels['selected_items'].format(total=total_fetched, selected=len(items))}\n\n"
-            "---\n\n"
         )
+        # The synthesis pass reads the whole edition at once. It sits above the
+        # contents so it is the first thing a reader meets, and it is optional:
+        # a failed synthesis costs the preamble, never the edition.
+        if preamble and preamble.strip():
+            header += f"{preamble.strip()}\n\n"
+        header += "---\n\n"
 
         toc_sections = []
         body_sections = []

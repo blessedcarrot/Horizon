@@ -188,7 +188,8 @@
           "horizon-research",
           "practice",
           "reliability-assurance"
-        ]
+        ],
+        "max_items": 20
       },
       {
         "name": "arXiv cs.CL",
@@ -199,7 +200,8 @@
           "horizon-research",
           "practice",
           "reliability-assurance"
-        ]
+        ],
+        "max_items": 20
       },
       {
         "name": "arXiv cs.LG",
@@ -210,7 +212,8 @@
           "horizon-research",
           "practice",
           "reliability-assurance"
-        ]
+        ],
+        "max_items": 20
       },
       {
         "name": "Hugging Face Blog",
@@ -410,7 +413,7 @@
         ]
       },
       {
-        "name": "Google News \u2014 AI & energy",
+        "name": "Google News — AI & energy",
         "url": "https://news.google.com/rss/search?q=AI%20AND%20%28utility%20OR%20%22power%20grid%22%20OR%20%22energy%20transition%22%20OR%20%22data%20center%20power%22%20OR%20electricity%29&hl=en-US&gl=US&ceid=US:en",
         "enabled": true,
         "category": "energy-infra",
@@ -432,7 +435,7 @@
         ]
       },
       {
-        "name": "IEEE Spectrum \u2014 AI",
+        "name": "IEEE Spectrum — AI",
         "url": "https://spectrum.ieee.org/feeds/topic/artificial-intelligence.rss",
         "enabled": true,
         "category": "media",
@@ -452,7 +455,8 @@
           "reliability-assurance",
           "practice",
           "horizon-research"
-        ]
+        ],
+        "max_items": 20
       }
     ],
     "reddit": {
@@ -608,7 +612,9 @@
       "business-markets": 5,
       "practice": 4,
       "horizon-research": 3
-    }
+    },
+    "synthesis_enabled": false,
+    "synthesis_model": "claude-opus-5"
   },
   "webhook": {
     "enabled": false,
@@ -625,5 +631,21 @@
       "text": "#{message_title}\n#{summary}"
     },
     "headers": ""
+  },
+  "selection": {
+    "enabled": false,
+    "gate_model": "claude-haiku-4-5",
+    "rank_model": "claude-sonnet-5",
+    "defend_model": "claude-sonnet-5",
+    "gate_effort": "low",
+    "rank_effort": "high",
+    "defend_effort": "high",
+    "gate_batch_size": 40,
+    "rank_chunk_size": 25,
+    "rank_carry": 10,
+    "consider": 10,
+    "max_publish": 6,
+    "defend_concurrency": 4,
+    "use_batch": true
   }
 }

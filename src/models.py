@@ -260,6 +260,10 @@ class RSSSourceConfig(BaseModel):
     category: Optional[str] = None
     content_extractor: Optional[str] = None
     profile: ProfileRoute = None
+    # Cap on items taken from one feed per run, newest first. Every other source
+    # type has a limit; RSS did not, and a single high-volume feed could supply
+    # the overwhelming majority of a run's items and therefore of its cost.
+    max_items: Optional[int] = Field(default=None, gt=0)
 
 
 class RedditSubredditConfig(BaseModel):
@@ -552,6 +556,32 @@ class ProfileSettingsConfig(BaseModel):
     topic_dedup: bool = True
 
 
+class SelectionConfig(BaseModel):
+    """Selection: gate, rank, defend.
+
+    Off by default. When enabled it replaces per-item scoring and thresholding
+    with a comparative ranking, because "the top few" is a property of the set
+    and cannot be computed from items judged one at a time.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False
+    gate_model: Optional[str] = None
+    rank_model: Optional[str] = None
+    defend_model: Optional[str] = None
+    gate_effort: str = "low"
+    rank_effort: str = "high"
+    defend_effort: str = "high"
+    gate_batch_size: int = Field(default=40, gt=0)
+    rank_chunk_size: int = Field(default=25, gt=1)
+    rank_carry: int = Field(default=10, gt=0)
+    consider: int = Field(default=10, gt=0)
+    max_publish: int = Field(default=6, gt=0)
+    defend_concurrency: int = Field(default=4, gt=0)
+    use_batch: bool = True
+
+
 class ProcessingConfig(BaseModel):
     """Profile discovery and fallback settings."""
 
@@ -584,6 +614,10 @@ class DigestConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     max_items: Optional[int] = Field(default=None, gt=0)
+    # One call over the selected set, written above the contents. Optional so a
+    # deployment that does not want it pays nothing for it.
+    synthesis_enabled: bool = False
+    synthesis_model: Optional[str] = None
     category_groups: Dict[str, CategoryGroupConfig] = Field(default_factory=dict)
     default_group: str = "other"
     default_group_limit: Optional[int] = Field(default=None, gt=0)
@@ -627,6 +661,7 @@ class Config(BaseModel):
     collection: CollectionConfig = Field(default_factory=CollectionConfig)
     digest: DigestConfig = Field(default_factory=DigestConfig)
     processing: ProcessingConfig = Field(default_factory=ProcessingConfig)
+    selection: SelectionConfig = Field(default_factory=SelectionConfig)
     display: DisplayConfig = Field(default_factory=DisplayConfig)
     extractors: Dict[str, ExtractorConfig] = Field(default_factory=dict)
     email: Optional[EmailConfig] = None

@@ -101,12 +101,28 @@ class RSSScraper(BaseScraper):
             # Parse feed
             feed = feedparser.parse(response.text)
 
+            # Select which entries to build before doing any per-entry work.
+            # Content extraction below issues a network fetch per entry, so a cap
+            # applied after the loop would save nothing. Newest first, so a cap
+            # keeps the most recent rather than whatever order the feed used.
+            in_window = []
             for entry in feed.entries:
-                # Parse published date
                 published_at = self._parse_date(entry)
                 if not published_at or published_at < since:
                     continue
+                in_window.append((published_at, entry))
 
+            if source.max_items is not None and len(in_window) > source.max_items:
+                in_window.sort(key=lambda pair: pair[0], reverse=True)
+                logger.info(
+                    "Capped RSS feed %s at %d of %d in-window items",
+                    source.name,
+                    source.max_items,
+                    len(in_window),
+                )
+                in_window = in_window[: source.max_items]
+
+            for published_at, entry in in_window:
                 # Generate unique ID from feed URL and entry ID
                 feed_id = str(source.url).split("//")[1].replace("/", "_")
                 entry_id = entry.get("id", entry.get("link", ""))
