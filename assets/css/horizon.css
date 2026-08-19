@@ -1,27 +1,33 @@
-/* ===== NEWS-Radar — instrument theme =====
+/* ===== NEWS-Radar — instrument theme, on Tenure tokens =====
    Overrides jekyll-theme-cayman. Design intent: an instrument readout, not a
    blog. Monospace carries structure and numbers; a reading face carries the
-   analysis prose, which runs to a few hundred words per item. Exactly one
-   accent, spent only on scores and links, so the eye tracks significance
-   rather than decoration. Deliberately dark only: this is a branded asset,
-   and one committed visual world reads stronger than two adequate ones.     */
+   analysis prose. Exactly one accent, spent only on scores and links, so the
+   eye tracks significance rather than decoration. Deliberately dark only: a
+   branded asset, one committed visual world.
+   Palette and type come from Tenure (the owner's personal design system):
+   ink ground, claret accent (oxblood in its light theme), Newsreader for
+   titles with a point of view, Public Sans for reading, Spline Sans Mono for
+   the instrument. Contrast verified: text 14.3:1, muted 6.8:1, faint 4.9:1,
+   claret 6.5:1 on ground — AA or better throughout.                        */
 
 :root {
-  --hz-bg: #0a0c10;
-  --hz-surface: #12161d;
-  --hz-surface-2: #191f28;
-  --hz-border: #232b38;
-  --hz-text: #e8edf4;
-  --hz-text-muted: #909dad;
-  --hz-text-faint: #626d7c;
-  --hz-accent: #ffb224;        /* amber — the single signal colour */
-  --hz-accent-dim: #7a5613;
-  --hz-link: #6cb6ff;
-  --hz-mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo,
-             Consolas, "Liberation Mono", monospace;
-  --hz-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
-             "Helvetica Neue", Arial, sans-serif;
-  --hz-radius: 6px;
+  --hz-bg: #161B26;            /* Tenure ink ground */
+  --hz-surface: #1E2431;
+  --hz-surface-2: #2A3140;
+  --hz-border: #2E3542;        /* Tenure hairline (dark) */
+  --hz-text: #E9EAE7;
+  --hz-text-muted: #9BA3AF;
+  --hz-text-faint: #808998;
+  --hz-accent: #D68A96;        /* claret — the single signal colour */
+  --hz-accent-dim: #7D2A38;    /* oxblood — the accent's light-theme twin */
+  --hz-accent-ink: #2A1218;    /* text on solid claret */
+  --hz-link: #D68A96;          /* one accent; links are not a second colour */
+  --hz-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --hz-mono: "Spline Sans Mono", ui-monospace, "SF Mono", SFMono-Regular,
+             Menlo, Consolas, "Liberation Mono", monospace;
+  --hz-sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+             Roboto, "Helvetica Neue", Arial, sans-serif;
+  --hz-radius: 3px;
 }
 
 /* --- Page shell. Previously inherited from jekyll-theme-cayman; the theme was
@@ -280,8 +286,8 @@ pre {
   vertical-align: middle;
   border: 1px solid transparent;
 }
-.score-badge[data-tier="high"] { background: var(--hz-accent); color: #1a1200; }
-.score-badge[data-tier="good"] { background: var(--hz-accent-dim); color: var(--hz-accent); border-color: var(--hz-accent); }
+.score-badge[data-tier="high"] { background: var(--hz-accent); color: var(--hz-accent-ink); }
+.score-badge[data-tier="good"] { background: var(--hz-accent-dim); color: #F2E6E8; border-color: var(--hz-accent-dim); }
 .score-badge[data-tier="mid"]  { background: transparent; color: var(--hz-text-muted); border-color: var(--hz-border); }
 .score-badge[data-tier="low"]  { background: transparent; color: var(--hz-text-faint); border-color: var(--hz-border); }
 
@@ -372,7 +378,7 @@ pre {
 }
 .lang-toggle button:first-child { border-radius: var(--hz-radius) 0 0 var(--hz-radius); }
 .lang-toggle button:last-child { border-radius: 0 var(--hz-radius) var(--hz-radius) 0; border-left: none; }
-.lang-toggle button.active { background: var(--hz-accent); color: #1a1200; border-color: var(--hz-accent); }
+.lang-toggle button.active { background: var(--hz-accent); color: var(--hz-accent-ink); border-color: var(--hz-accent); }
 .lang-section.hidden { display: none; }
 
 @media (max-width: 640px) {
@@ -638,3 +644,26 @@ pre {
 }
 .run-log-wrap > summary:hover { color: var(--hz-accent); }
 .run-log-wrap[open] > summary { margin-bottom: .6rem; }
+
+/* --- Tenure display face. Newsreader carries the titles that hold a point
+   of view: the wordmark, item and commentary headlines, page titles. The
+   mono stays on everything that is instrument: labels, scores, timestamps,
+   theme headings, the run log. --- */
+.page-header .project-name {
+  font-family: var(--hz-display) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0;
+}
+.main-content h1 {
+  font-family: var(--hz-display) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0;
+}
+.item-title { font-size: 1.65rem !important; line-height: 1.25; }
+.commentary-title { font-weight: 500 !important; }
+.take-title {
+  font-family: var(--hz-display);
+  font-weight: 500;
+  font-size: 1.08rem;
+}
+.commentary-body { font-family: var(--hz-sans); }
