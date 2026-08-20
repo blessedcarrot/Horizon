@@ -911,9 +911,14 @@ class HorizonOrchestrator:
                 item.processing.classification.profile = candidate.theme
             selected.append(item)
 
+        # Format kept stable: scripts/check_run_health.py parses this line to
+        # build the funnel. Selection replaces the threshold and digest-cap
+        # stages, so without it the footer would report no published count at
+        # all and stop explaining the page it sits on.
         self.console.print(
-            f"{self.icons['filter']} Selection: {result.gate_kept} kept of "
-            f"{len(items)}, {len(result.ranked_ids)} ranked, "
+            f"{self.icons['filter']} Selection: {len(items)} gated to "
+            f"{result.gate_kept}, {len(result.ranked_ids)} ranked, "
+            f"{result.defend_rejected} rejected by floor, "
             f"{len(selected)} published\n"
         )
         return selected, result

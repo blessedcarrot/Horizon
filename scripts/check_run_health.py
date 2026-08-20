@@ -59,6 +59,13 @@ SELECTED_RE = re.compile(r"Selected (\d+) items? with profile filters")
 MERGED_RE = re.compile(r"Merged (\d+) cross-source duplicates")
 TOPIC_DEDUP_RE = re.compile(r"Removed (\d+) topic duplicates")
 BALANCED_RE = re.compile(r"Balanced digest selected (\d+)/(\d+) items")
+# Ranked selection replaces the threshold, topic-dedup and digest-cap stages,
+# so none of the regexes above fire when it runs. Parsing its one line keeps
+# the funnel honest under either selection path.
+SELECTION_RE = re.compile(
+    r"Selection: (\d+) gated to (\d+), (\d+) ranked, (\d+) rejected by floor, "
+    r"(\d+) published"
+)
 ENRICHED_RE = re.compile(r"Enriched (\d+)/(\d+) items")
 TOKENS_RE = re.compile(
     r"Token usage this run: (\d+) tokens \(input: (\d+), output: (\d+)\)"
@@ -80,6 +87,7 @@ def parse_log(path: Path):
     totals = {
         "fetched": None, "merged": None, "analyzed": None, "selected": None,
         "topic_dupes": None, "published": None, "pre_cap": None,
+        "gated": None, "ranked": None, "floor_rejected": None,
         "enriched": None, "enrich_attempted": None,
         "tokens": None, "tokens_in": None, "tokens_out": None,
     }
@@ -114,6 +122,11 @@ def parse_log(path: Path):
         elif m := BALANCED_RE.search(line):
             totals["published"] = int(m.group(1))
             totals["pre_cap"] = int(m.group(2))
+        elif m := SELECTION_RE.search(line):
+            totals["gated"] = int(m.group(2))
+            totals["ranked"] = int(m.group(3))
+            totals["floor_rejected"] = int(m.group(4))
+            totals["published"] = int(m.group(5))
         elif m := ENRICHED_RE.search(line):
             totals["enriched"] = int(m.group(1))
             totals["enrich_attempted"] = int(m.group(2))
@@ -266,6 +279,10 @@ def funnel(totals) -> str:
         steps.append(f"{totals['analyzed']} analyzed")
     if totals["selected"] is not None:
         steps.append(f"{totals['selected']} cleared threshold")
+    if totals.get("gated") is not None:
+        steps.append(f"{totals['gated']} kept by the gate")
+    if totals.get("floor_rejected"):
+        steps.append(f"{totals['floor_rejected']} rejected by the floor")
     if totals["topic_dupes"]:
         steps.append(f"{totals['topic_dupes']} topic duplicates merged")
     # The digest cap is a stage like any other and hides the biggest drop of

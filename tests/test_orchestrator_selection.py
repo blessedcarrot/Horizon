@@ -35,10 +35,23 @@ def orchestrator(monkeypatch):
     return HorizonOrchestrator(config, storage)
 
 
-def test_selection_is_off_by_default(orchestrator) -> None:
-    """Shipping this enabled would put unexercised code in front of readers."""
-    assert orchestrator.config.selection.enabled is False
+def test_selection_is_on_and_synthesis_is_not(orchestrator) -> None:
+    """Pins the deliberate state, so a change to either is a decision.
+
+    Selection was switched on for the run of 2026-08-20, after the arXiv cap had
+    been verified in production. Synthesis stays off: it writes the paragraph a
+    reader meets first, and it should follow a selection whose output has been
+    read, not precede it.
+    """
+    assert orchestrator.config.selection.enabled is True
     assert orchestrator.config.digest.synthesis_enabled is False
+
+    # A floor that could publish an unbounded edition would defeat the point.
+    assert orchestrator.config.selection.max_publish <= 10
+    assert (
+        orchestrator.config.selection.consider
+        >= orchestrator.config.selection.max_publish
+    )
 
 
 def test_settings_map_config_onto_the_selection_module(orchestrator) -> None:
