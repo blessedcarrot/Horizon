@@ -134,7 +134,7 @@ Return valid JSON only:
   ]
 }}
 
-Do not emit unknown block IDs. Omit optional blocks when there is no useful content. No tool results are available, so every `source_refs` list must be empty."""
+Every block object must carry all four keys. `title` is the block's own heading and is required on each block, separately from the artifact `title` above; a block without it is rejected and the item publishes with no background at all. Do not emit unknown block IDs. Omit optional blocks when there is no useful content. No tool results are available, so every `source_refs` list must be empty."""
 
 
 def item_context(
