@@ -1,3 +1,5 @@
+<!-- lint-ignore-file: this file quotes every pattern it bans -->
+
 # Writing standard
 
 Everything a reader sees is governed by this: the site copy, the prompts that
@@ -83,6 +85,30 @@ whole section, "What it does not do", written as three exclusions in a row,
 which is the rule about negation appearing at a scale the greps were not looking
 for. When something slips through, extend the checks rather than only fixing the
 instance.
+
+## One command instead of five
+
+The greps above stay useful for their specificity. For a single pass over a
+file, `lint-voice.py` from the Tenure design system applies rules 1 to 3 at
+once, strips HTML and CSS before checking so markup cannot raise a false hit,
+and reports each finding with its line:
+
+```bash
+python3 ~/AI-Proj/design/tenure/lint-voice.py docs/index.md docs/method.md
+```
+
+It exits non-zero when anything is found, so a workflow step can gate on it.
+
+Text that quotes a banned pattern in order to teach it is suppressed with
+`data-lint="off"` on an HTML element, `<!-- lint-ignore -->` on a Markdown
+line, or `<!-- lint-ignore-file -->` near the top of a file that is entirely
+examples. Both markers count only when written as a comment, so prose naming
+them keeps being checked, and skipped files are listed in the output. That
+also answers the note above about this file matching its own patterns.
+
+Rules 4 and 5 stay as greps. A section framed by what something is not, and a
+profile missing its style constraints, are shapes a line-by-line check does
+not see.
 
 ## Checking generated output
 
