@@ -67,6 +67,23 @@ SELECTION_RE = re.compile(
     r"(\d+) published"
 )
 ENRICHED_RE = re.compile(r"Enriched (\d+)/(\d+) items")
+# A selection stage that produces nothing logs at WARNING and carries on with a
+# fallback, so the 2026-08-20 run published one item and reported success. The
+# fallbacks are right, because losing a stage should not lose the day's items,
+# but a stage that never ran is a broken run and has to be said out loud.
+# Matched only in their total forms: a ranker dropping one id of twenty-five is
+# a model being sloppy, and failing the build on that would make the red X
+# meaningless again.
+COLLAPSE_PATTERNS = (
+    (re.compile(r"Gate returned no verdict for (\d+) items?"),
+     "The gate produced no verdict at all, so every item passed through "
+     "unfiltered. The gate did not run."),
+    (re.compile(r"Batch \S+ returned 0 of (\d+) results"),
+     "A batch returned none of its results. Every entry in it failed."),
+    (re.compile(r"Ranker omitted (\d+) of (\d+) ids"),
+     "A whole ranking chunk came back empty, so those items were published "
+     "or dropped without ever being ranked."),
+)
 TOKENS_RE = re.compile(
     r"Token usage this run: (\d+) tokens \(input: (\d+), output: (\d+)\)"
 )
@@ -92,6 +109,7 @@ def parse_log(path: Path):
         "tokens": None, "tokens_in": None, "tokens_out": None,
     }
     errors: list[str] = []
+    collapsed: list[tuple[str, str]] = []
     warnings = 0
     fetching = True  # detail lines only count before fetching ends
     current_source = None
@@ -146,8 +164,17 @@ def parse_log(path: Path):
             open_error = None
         if WARNING_RE.search(line):
             warnings += 1
+            for pattern, explanation in COLLAPSE_PATTERNS:
+                if m := pattern.search(line):
+                    groups = m.groups()
+                    # The ranker warns on every omission. Only a chunk that came
+                    # back entirely empty means the call failed.
+                    if len(groups) == 2 and groups[0] != groups[1]:
+                        continue
+                    collapsed.append((" ".join(line.split())[:200], explanation))
+                    break
 
-    return per_source, per_feed, totals, errors, warnings
+    return per_source, per_feed, totals, errors, warnings, collapsed
 
 
 def group_errors(errors: list[str]) -> list[tuple[str, int]]:
@@ -211,7 +238,7 @@ def annotate(level: str, message: str) -> None:
 
 
 def emit_annotations(per_source, per_feed, totals, grouped, warnings,
-                     cadence=None, cadence_gap=False) -> None:
+                     cadence=None, cadence_gap=False, collapsed=None) -> None:
     headline = (
         f"Radar run: {funnel(totals).replace('**', '')}. "
         f"{sum(c for _, c in grouped)} errors, {warnings} warnings"
@@ -222,6 +249,9 @@ def emit_annotations(per_source, per_feed, totals, grouped, warnings,
 
     if note := enrichment_note(totals):
         annotate("warning", note.lstrip("- ").replace("**", ""))
+
+    for line, explanation in collapsed or []:
+        annotate("error", f"{explanation} Log line: {line}")
 
     for line in cadence or []:
         if line.startswith("- 🔴"):
@@ -314,7 +344,8 @@ def enrichment_note(totals):
     )
 
 
-def build_report(per_source, per_feed, totals, grouped, warnings, cadence=None) -> str:
+def build_report(per_source, per_feed, totals, grouped, warnings,
+                 cadence=None, collapsed=None) -> str:
     zero_sources = sorted(n for n, c in per_source.items() if c == 0)
     fatal_head, degrading_head, _ = split_by_severity(grouped, totals)
     lines = ["## Run health", ""]
@@ -331,6 +362,9 @@ def build_report(per_source, per_feed, totals, grouped, warnings, cadence=None) 
             f" ({totals['tokens_in']:,} in / {totals['tokens_out']:,} out)"
         )
     lines.append(tail)
+    for line, explanation in collapsed or []:
+        lines.append(f"- 🔴 **A pipeline stage produced nothing.** {explanation}")
+        lines.append(f"  - `{line}`")
     lines += cadence or []
     if note := enrichment_note(totals):
         lines.append(note)
@@ -496,7 +530,7 @@ def main() -> int:
                     help="the run's --hours window; enables the cadence check")
     args = ap.parse_args()
 
-    per_source, per_feed, totals, errors, warnings = parse_log(args.logfile)
+    per_source, per_feed, totals, errors, warnings, collapsed = parse_log(args.logfile)
     grouped = group_errors(errors)
 
     cadence, cadence_gap = ([], False)
@@ -504,12 +538,13 @@ def main() -> int:
         cadence, cadence_gap = check_cadence(args.window_hours)
 
     report = build_report(
-        per_source, per_feed, totals, grouped, warnings, cadence=cadence
+        per_source, per_feed, totals, grouped, warnings,
+        cadence=cadence, collapsed=collapsed,
     )
     print(report)
     emit_annotations(
         per_source, per_feed, totals, grouped, warnings,
-        cadence=cadence, cadence_gap=cadence_gap,
+        cadence=cadence, cadence_gap=cadence_gap, collapsed=collapsed,
     )
 
     import os
@@ -537,6 +572,9 @@ def main() -> int:
     # That is lost coverage rather than lost depth, so it goes red.
     if cadence_gap:
         fatal_count += 1
+    # A stage that never ran is the failure this whole script exists to catch:
+    # the run looks complete, publishes something, and reports success.
+    fatal_count += len(collapsed)
     Path("health_errors.txt").write_text(str(fatal_count), encoding="utf-8")
     # Machine-readable form for notify_telegram.py, so the notifier doesn't
     # have to re-parse the log and the two can't disagree about a run.
