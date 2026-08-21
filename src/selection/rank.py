@@ -81,6 +81,25 @@ def _entries(group: Sequence[Candidate]) -> str:
     )
 
 
+async def _rank_call(complete: Completer, group: Sequence[Candidate]) -> str:
+    """Run one ranking call, logging a failure rather than swallowing it.
+
+    An exception here used to surface only as "omitted N of N ids", which reads
+    like a model that ignored instructions rather than a call that never
+    returned. On 2026-08-20 two whole chunks failed this way and the log gave no
+    reason for either.
+    """
+    try:
+        return await complete(rank_system(), rank_user(_entries(group)))
+    except Exception as exc:
+        logger.error(
+            "Rank call failed for a chunk of %d, leaving it unranked: %s",
+            len(group),
+            exc,
+        )
+        return ""
+
+
 async def rank(
     candidates: Sequence[Candidate],
     complete: Completer,
@@ -95,14 +114,14 @@ async def rank(
         return items
 
     if len(items) <= chunk_size:
-        text = await complete(rank_system(), rank_user(_entries(items)))
+        text = await _rank_call(complete, items)
         return reconcile(_parse_order(text), items)
 
     # Too many to compare at once: rank in chunks, then run the winners off.
     groups = [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
     winners: List[Candidate] = []
     for group in groups:
-        text = await complete(rank_system(), rank_user(_entries(group)))
+        text = await _rank_call(complete, group)
         winners.extend(reconcile(_parse_order(text), group)[:carry])
 
     # Guard against a runoff that cannot shrink, which would recurse forever.

@@ -196,7 +196,7 @@ def test_batch_requests_carry_per_item_schema_and_model(monkeypatch) -> None:
             [
                 BatchRequest(
                     "a", "s", "u", schema={"type": "object"},
-                    effort="low", model="claude-haiku-4-5",
+                    effort="low", model="claude-sonnet-5",
                 )
             ],
             poll_seconds=0,
@@ -204,5 +204,69 @@ def test_batch_requests_carry_per_item_schema_and_model(monkeypatch) -> None:
     )
     sent = batches.create.await_args.kwargs["requests"][0]
     assert sent["custom_id"] == "a"
-    assert sent["params"]["model"] == "claude-haiku-4-5"
+    assert sent["params"]["model"] == "claude-sonnet-5"
     assert sent["params"]["output_config"]["effort"] == "low"
+
+
+# ------------------------------------------- model capability gating
+
+
+def test_effort_is_dropped_for_models_that_reject_it(monkeypatch) -> None:
+    """The gate batch of 2026-08-20 lost all 247 items to this.
+
+    `output_config.effort` is rejected on Haiku 4.5. Sending it failed every
+    entry in the batch, and the gate's keep-on-no-verdict fallback then made a
+    total failure look like a permissive gate that kept everything.
+    """
+    params = _client(monkeypatch).build_params(
+        "sys", "usr", model="claude-haiku-4-5", effort="low"
+    )
+    assert "output_config" not in params or "effort" not in params["output_config"]
+    assert "thinking" not in params
+
+
+def test_schema_still_sent_to_older_models(monkeypatch) -> None:
+    """Structured outputs are supported on Haiku 4.5; only effort is not."""
+    params = _client(monkeypatch).build_params(
+        "sys", "usr", model="claude-haiku-4-5", schema={"type": "object"}, effort="low"
+    )
+    assert params["output_config"]["format"]["type"] == "json_schema"
+    assert "effort" not in params["output_config"]
+
+
+def test_effort_and_thinking_kept_for_models_that_accept_them(monkeypatch) -> None:
+    params = _client(monkeypatch).build_params(
+        "sys", "usr", model="claude-sonnet-5", effort="high"
+    )
+    assert params["output_config"]["effort"] == "high"
+    assert params["thinking"] == {"type": "disabled"}
+
+
+def test_dated_snapshot_ids_resolve_by_prefix(monkeypatch) -> None:
+    from src.ai.client import supports_modern_params
+
+    assert supports_modern_params("claude-haiku-4-5-20251001") is False
+    assert supports_modern_params("claude-sonnet-5") is True
+    assert supports_modern_params("") is False
+
+
+def test_batch_failure_logs_the_reason_not_just_the_category(monkeypatch, caplog) -> None:
+    """"errored" seven times said nothing about why and cost a log download."""
+    import logging
+    from types import SimpleNamespace
+
+    client = _client(monkeypatch)
+    entry = SimpleNamespace(
+        custom_id="gate-0",
+        result=SimpleNamespace(
+            type="errored",
+            error=SimpleNamespace(type="invalid_request_error",
+                                  message="effort not supported"),
+        ),
+    )
+    _batched(client, [entry])
+    with caplog.at_level(logging.WARNING):
+        asyncio.run(
+            client.complete_batch([BatchRequest("gate-0", "s", "u")], poll_seconds=0)
+        )
+    assert "effort not supported" in caplog.text

@@ -91,6 +91,28 @@ def _normalize_ollama_base_url(base_url: str) -> str:
     return f"{normalized}/v1"
 
 
+# Not every model accepts the modern request surface, and sending a parameter a
+# model rejects fails the whole call. The gate batch of 2026-08-20 lost all 247
+# items this way: `output_config.effort` is rejected on Haiku 4.5, so every entry
+# errored, and the gate's keep-on-no-verdict fallback then made a total failure
+# look like a permissive gate.
+#
+# Matched on prefix so dated snapshots (claude-haiku-4-5-20251001) resolve too.
+_MODERN_PARAM_PREFIXES = (
+    "claude-opus-5",
+    "claude-opus-4-6",
+    "claude-opus-4-7",
+    "claude-opus-4-8",
+    "claude-sonnet-5",
+    "claude-sonnet-4-6",
+)
+
+
+def supports_modern_params(model: str) -> bool:
+    """Whether `output_config.effort` and `thinking: disabled` are accepted."""
+    return str(model or "").startswith(_MODERN_PARAM_PREFIXES)
+
+
 class AIClient(ABC):
     """Abstract base class for AI clients."""
 
@@ -162,22 +184,32 @@ class AnthropicClient(AIClient):
         Kept separate so the batch path cannot drift from the live one, and so
         request shaping is testable without a network call.
         """
+        chosen_model = model or self.model
+        modern = supports_modern_params(chosen_model)
+
         params: Dict[str, Any] = {
-            "model": model or self.model,
+            "model": chosen_model,
             "max_tokens": self.max_tokens if max_tokens is None else max_tokens,
             "temperature": self.temperature if temperature is None else temperature,
             "system": system,
             "messages": [{"role": "user", "content": user}],
-            "thinking": {"type": "disabled"},
         }
+        if modern:
+            params["thinking"] = {"type": "disabled"}
 
         # `output_config` carries both the response format and the effort level,
-        # so build it once rather than setting the key twice.
+        # so build it once rather than setting the key twice. Effort is dropped
+        # for models that reject it rather than passed through and left to fail.
         output_config: Dict[str, Any] = {}
         if schema is not None:
             output_config["format"] = {"type": "json_schema", "schema": schema}
         if effort is not None:
-            output_config["effort"] = effort
+            if modern:
+                output_config["effort"] = effort
+            else:
+                logger.debug(
+                    "Dropping effort=%s: unsupported on %s", effort, chosen_model
+                )
         if output_config:
             params["output_config"] = output_config
         if tools:
@@ -347,10 +379,18 @@ class AnthropicClient(AIClient):
         collected: Dict[str, str] = {}
         async for entry in await self.client.messages.batches.results(batch.id):
             if entry.result.type != "succeeded":
+                # Log the reason, not just the category. The 2026-08-20 gate
+                # failure reported only "errored" seven times, which said
+                # nothing about why and cost a log download to diagnose.
+                error = getattr(entry.result, "error", None)
+                detail = getattr(error, "message", None) or getattr(
+                    error, "type", ""
+                )
                 logger.warning(
-                    "Batch entry %s did not succeed: %s",
+                    "Batch entry %s did not succeed: %s%s",
                     entry.custom_id,
                     entry.result.type,
+                    f" ({detail})" if detail else "",
                 )
                 continue
             message = entry.result.message
