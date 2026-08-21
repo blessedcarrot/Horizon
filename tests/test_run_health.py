@@ -107,3 +107,33 @@ def test_analysis_collapsing_on_every_item_stays_fatal(tmp_path):
     _, _, totals, errors, _, _ = _parse(tmp_path, body)
     fatal, _, _ = health.split_by_severity(health.group_errors(errors), totals)
     assert sum(c for _, c in fatal) == 30
+
+
+def test_a_dedup_failure_is_fatal_even_though_it_has_no_log_level(tmp_path):
+    """Topic dedup announces its own failure through console.print.
+
+    That line carries no WARNING column, so matching on the log level alone
+    missed it entirely. It is on the live threshold path, so this is the one
+    of these that can fire on an ordinary run.
+    """
+    body = HEALTHY + "   dedup: AI call failed (timeout), skipping\n"
+    *_, collapsed = _parse(tmp_path, body)
+    assert len(collapsed) == 1
+    assert "never looked for" in collapsed[0][1]
+
+
+def test_an_unparsed_dedup_response_is_fatal(tmp_path):
+    body = HEALTHY + "   dedup: could not parse AI response, skipping\n"
+    *_, collapsed = _parse(tmp_path, body)
+    assert len(collapsed) == 1
+
+
+def test_a_normal_dedup_line_is_not_a_failure(tmp_path):
+    """Dedup logs each merge it makes. Those must not trip the check."""
+    body = HEALTHY + (
+        "   dedup: keep [11] WeSCE: A Benchmark for Measuring Security Drift\n"
+        "          drop [25] WeSCE: A Benchmark for Measuring Security Drift\n"
+        "🧹 Removed 2 topic duplicates → 45 unique items\n"
+    )
+    *_, collapsed = _parse(tmp_path, body)
+    assert collapsed == []

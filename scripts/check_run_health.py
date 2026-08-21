@@ -83,6 +83,16 @@ COLLAPSE_PATTERNS = (
     (re.compile(r"Ranker omitted (\d+) of (\d+) ids"),
      "A whole ranking chunk came back empty, so those items were published "
      "or dropped without ever being ranked."),
+    # These two print through console.print rather than the logger, so they
+    # carry no WARNING column and were invisible here. They are on the live
+    # threshold path, unlike the three above.
+    (re.compile(r"dedup: could not parse AI response, skipping"),
+     "Topic dedup could not parse its response and returned every item "
+     "unchanged. Duplicates on the page were not merged, they were never "
+     "looked for."),
+    (re.compile(r"dedup: AI call failed"),
+     "The topic dedup call failed and returned every item unchanged. "
+     "Duplicates on the page were never looked for."),
 )
 TOKENS_RE = re.compile(
     r"Token usage this run: (\d+) tokens \(input: (\d+), output: (\d+)\)"
@@ -164,15 +174,17 @@ def parse_log(path: Path):
             open_error = None
         if WARNING_RE.search(line):
             warnings += 1
-            for pattern, explanation in COLLAPSE_PATTERNS:
-                if m := pattern.search(line):
-                    groups = m.groups()
-                    # The ranker warns on every omission. Only a chunk that came
-                    # back entirely empty means the call failed.
-                    if len(groups) == 2 and groups[0] != groups[1]:
-                        continue
-                    collapsed.append((" ".join(line.split())[:200], explanation))
-                    break
+        # Checked on every line, not just WARNING records: a stage can announce
+        # its own failure through console.print, which carries no log level.
+        for pattern, explanation in COLLAPSE_PATTERNS:
+            if m := pattern.search(line):
+                groups = m.groups()
+                # The ranker warns on every omission. Only a chunk that came
+                # back entirely empty means the call failed.
+                if len(groups) == 2 and groups[0] != groups[1]:
+                    continue
+                collapsed.append((" ".join(line.split())[:200], explanation))
+                break
 
     return per_source, per_feed, totals, errors, warnings, collapsed
 
