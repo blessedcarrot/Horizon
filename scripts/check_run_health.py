@@ -326,6 +326,16 @@ def funnel(totals) -> str:
         steps.append(f"{totals['selected']} cleared threshold")
     if totals.get("gated") is not None:
         steps.append(f"{totals['gated']} kept by the gate")
+    # The ranker and the shortlist cut were both missing, so the selection
+    # funnel could not close: the 2026-08-22 run read "13 kept by the gate ->
+    # 10 rejected by the floor -> 0 published", which implies three items went
+    # missing. They were ranked below the shortlist the floor reads.
+    if totals.get("ranked") is not None:
+        steps.append(f"{totals['ranked']} ranked")
+        considered = (totals.get("floor_rejected") or 0) + (totals.get("published") or 0)
+        below = totals["ranked"] - considered
+        if below > 0:
+            steps.append(f"{below} below the shortlist cut")
     if totals.get("floor_rejected"):
         steps.append(f"{totals['floor_rejected']} rejected by the floor")
     if totals["topic_dupes"]:

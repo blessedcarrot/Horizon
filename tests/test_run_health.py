@@ -153,3 +153,23 @@ def test_a_partial_gate_gap_is_not_fatal(tmp_path):
     )
     *_, collapsed = _parse(tmp_path, body)
     assert collapsed == []
+
+
+def test_the_selection_funnel_accounts_for_every_item(tmp_path):
+    """13 kept, 10 rejected, 0 published leaves three unexplained.
+
+    They were ranked below the shortlist the floor reads. Without that stage
+    the line reads as three items silently lost, which is the same defect the
+    cross-source and digest-cap stages had before they were added.
+    """
+    body = (
+        "📥 Fetched 141 items from all sources\n"
+        "🤖 Analyzed 141 items with AI\n"
+        "⭐️ Selection: 141 gated to 13, 13 ranked, 10 rejected by floor, 0 published\n"
+    )
+    _, _, totals, _, _, _ = _parse(tmp_path, body)
+    line = health.funnel(totals)
+    assert "13 ranked" in line
+    assert "3 below the shortlist cut" in line
+    # The arithmetic the reader will do must work out.
+    assert totals["ranked"] == 3 + totals["floor_rejected"] + totals["published"]
