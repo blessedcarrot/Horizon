@@ -53,6 +53,17 @@ The mistake is checking only the first. All three reach the reader.
 3. **Code strings.** `scripts/check_run_health.py` renders a health footer into
    every published page. `scripts/notify_telegram.py` writes the notifications.
 
+## Spelling
+
+US English, so analyze and analyzed rather than analyse and analysed, and
+organize, recognize, prioritize. This is a convention rather than a
+judgement: the site had one of each before 2026-08-22, and a reader who
+notices the inconsistency has stopped reading the sentence.
+
+The rule is narrower than it looks. Words ending -ise in both varieties
+keep it: advertise, surprise, exercise, comprise, revise, supervise. So
+this is a decision per word rather than a search and replace.
+
 ## The audit
 
 Run before publishing anything, and after adding a profile or a page.
