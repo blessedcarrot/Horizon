@@ -9,6 +9,15 @@ permalink: /feed-en.xml
   <link href="{{ '/' | absolute_url }}"/>
   <updated>{{ site.time | date_to_xmlschema }}</updated>
   <id>{{ '/' | absolute_url }}</id>
+  <!-- Atom requires a feed-level author unless every entry carries its own.
+       Without it a reader shows each entry unattributed, which is the same
+       gap the edition titles had until 19347ed. Set at feed level so it
+       covers past entries too, and changes no entry's id or date, so nothing
+       is re-notified. -->
+  <author>
+    <name>Bruno Coelho</name>
+    <uri>https://www.linkedin.com/in/bracoelho/</uri>
+  </author>
   {% assign takes = site.commentary | where_exp: "c", "c.title" | sort: "date" | reverse %}
   {% for take in takes limit:5 %}
   <entry>
