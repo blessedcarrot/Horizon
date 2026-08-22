@@ -1,4 +1,4 @@
-/* ===== NEWS-Radar — instrument theme, on Tenure tokens =====
+/* ===== AI Radar: instrument theme, on Tenure tokens =====
    Overrides jekyll-theme-cayman. Design intent: an instrument readout, not a
    blog. Monospace carries structure and numbers; a reading face carries the
    analysis prose. Exactly one accent, spent only on scores and links, so the
@@ -8,7 +8,7 @@
    ink ground, claret accent (oxblood in its light theme), Newsreader for
    titles with a point of view, Public Sans for reading, Spline Sans Mono for
    the instrument. Contrast verified: text 14.3:1, muted 6.8:1, faint 4.9:1,
-   claret 6.5:1 on ground — AA or better throughout.                        */
+   claret 6.5:1 on ground, AA or better throughout.                        */
 
 :root {
   --hz-bg: #161B26;            /* Tenure ink ground */
@@ -18,8 +18,8 @@
   --hz-text: #E9EAE7;
   --hz-text-muted: #9BA3AF;
   --hz-text-faint: #808998;
-  --hz-accent: #D68A96;        /* claret — the single signal colour */
-  --hz-accent-dim: #7D2A38;    /* oxblood — the accent's light-theme twin */
+  --hz-accent: #D68A96;        /* claret: the single signal colour */
+  --hz-accent-dim: #7D2A38;    /* oxblood: the accent's light-theme twin */
   --hz-accent-ink: #2A1218;    /* text on solid claret */
   --hz-accent-ink-soft: #F2E6E8; /* text on oxblood: claret fails AA at this size */
   --hz-link: #D68A96;          /* one accent; links are not a second colour */
@@ -126,7 +126,7 @@ pre {
   padding: 2.2rem 1rem 2rem !important;
   position: relative;
 }
-/* Hairline of accent along the top — the "instrument on" cue. */
+/* Hairline of accent along the top, the "instrument on" cue. */
 .page-header::before {
   content: "";
   position: absolute; inset: 0 0 auto 0; height: 2px;
@@ -182,7 +182,7 @@ pre {
 .radar-intro strong { color: var(--hz-text); }
 
 /* --- Byline: the credibility line. Quieter than the intro, but present on
-   first screen — a portfolio asset has to say who is behind the judgement. */
+   first screen, because a portfolio asset has to say who is behind the judgement. */
 .byline {
   font-size: .88rem;
   color: var(--hz-text-muted);
