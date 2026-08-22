@@ -4,7 +4,7 @@ permalink: /feed-en.xml
 ---
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>{{ site.title }} - English Digest</title>
+  <title>{{ site.title }}, curated by Bruno Coelho</title>
   <link href="{{ '/feed-en.xml' | absolute_url }}" rel="self"/>
   <link href="{{ '/' | absolute_url }}"/>
   <updated>{{ site.time | date_to_xmlschema }}</updated>

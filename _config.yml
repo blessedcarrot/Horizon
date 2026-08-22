@@ -1,5 +1,5 @@
 # No theme: docs/_layouts/default.html is our own shell.
-title: NEWS-Radar
+title: AI Radar
 description: "Early warning on AI and agentic AI, curated by Bruno Coelho"
 baseurl: "" # served at the domain root, not a /Horizon subpath
 url: "https://radar.bcoelho.com" # custom domain; see docs/CNAME
