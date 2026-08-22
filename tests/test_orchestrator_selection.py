@@ -35,18 +35,27 @@ def orchestrator(monkeypatch):
     return HorizonOrchestrator(config, storage)
 
 
-def test_selection_and_synthesis_are_both_off(orchestrator) -> None:
+def test_selection_is_on_for_verification_and_synthesis_is_not(orchestrator) -> None:
     """Pins the deliberate state, so a change to either is a decision.
 
-    Selection ran once, on 2026-08-20, and failed. Every entry of the gate batch
-    errored because `output_config.effort` is rejected on Haiku 4.5, the
-    keep-on-no-verdict fallback then passed all 247 items to the ranker, and the
-    edition came out at one item. The parameter bug is fixed and covered by
-    tests, but the fix has not itself been exercised against a live model, so
-    the flag stays off until a run confirms it.
+    Selection is on for a supervised verification of the Haiku parameter fix
+    that follows the failed run of 2026-08-20. Two things make this safer than
+    that attempt: the run is dispatched manually and read before the scheduled
+    one, and `911db6a` now fails the build on 'Gate returned no verdict', so a
+    repeat of that failure goes red instead of quietly publishing one item.
+
+    Synthesis stays off. It writes the paragraph a reader meets first, and it
+    should follow a selection whose output has been read.
     """
-    assert orchestrator.config.selection.enabled is False
+    assert orchestrator.config.selection.enabled is True
     assert orchestrator.config.digest.synthesis_enabled is False
+
+    # A floor that could publish an unbounded edition would defeat the point.
+    assert orchestrator.config.selection.max_publish <= 10
+    assert (
+        orchestrator.config.selection.consider
+        >= orchestrator.config.selection.max_publish
+    )
 
     # A floor that could publish an unbounded edition would defeat the point.
     assert orchestrator.config.selection.max_publish <= 10
