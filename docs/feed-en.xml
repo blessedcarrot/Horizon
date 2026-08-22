@@ -19,7 +19,17 @@ permalink: /feed-en.xml
     <content type="html"><![CDATA[ {{ take.content }} ]]></content>
   </entry>
   {% endfor %}
-  {% assign en_posts = site.posts | where: "lang", "en" %}
+  {%- comment -%}
+  A run that publishes nothing still writes its page, which is right: the
+  page carries the health footer and proves the run happened. The feed
+  entry has no reader value, and after a quiet run it is the first thing a
+  new subscriber sees. Excluded here rather than by not writing the page.
+
+  "!= 0" rather than "> 0" on purpose: posts written before the item count
+  was added to front matter have no `items` field at all, and a nil count
+  means unknown rather than empty. Exclude only what is known to be zero.
+  {%- endcomment -%}
+  {% assign en_posts = site.posts | where: "lang", "en" | where_exp: "p", "p.items != 0" %}
   {% for post in en_posts limit:7 %}
   <entry>
     <title>{{ post.title | escape }}</title>
