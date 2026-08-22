@@ -75,7 +75,10 @@ ENRICHED_RE = re.compile(r"Enriched (\d+)/(\d+) items")
 # a model being sloppy, and failing the build on that would make the red X
 # meaningless again.
 COLLAPSE_PATTERNS = (
-    (re.compile(r"Gate returned no verdict for (\d+) items?"),
+    # Two groups on purpose: the guard below only treats this as a collapse
+    # when the counts match. A gate that missed a handful of items still ran,
+    # and failing the build on that is how a red X stops being read.
+    (re.compile(r"Gate returned no verdict for (\d+) of (\d+) items?"),
      "The gate produced no verdict at all, so every item passed through "
      "unfiltered. The gate did not run."),
     (re.compile(r"Batch \S+ returned 0 of (\d+) results"),

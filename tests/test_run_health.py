@@ -47,8 +47,8 @@ def test_a_healthy_run_reports_nothing_collapsed(tmp_path):
 
 def test_a_gate_that_returned_no_verdict_is_fatal(tmp_path):
     body = HEALTHY + (
-        "[08/20/26 21:54:09] WARNING  Gate returned no verdict for 247 items; "
-        "keeping them for the ranker\n"
+        "[08/20/26 21:54:09] WARNING  Gate returned no verdict for 247 of 247 "
+        "items; keeping them for the ranker\n"
     )
     *_, collapsed = _parse(tmp_path, body)
     assert len(collapsed) == 1
@@ -134,6 +134,22 @@ def test_a_normal_dedup_line_is_not_a_failure(tmp_path):
         "   dedup: keep [11] WeSCE: A Benchmark for Measuring Security Drift\n"
         "          drop [25] WeSCE: A Benchmark for Measuring Security Drift\n"
         "🧹 Removed 2 topic duplicates → 45 unique items\n"
+    )
+    *_, collapsed = _parse(tmp_path, body)
+    assert collapsed == []
+
+
+def test_a_partial_gate_gap_is_not_fatal(tmp_path):
+    """A gate that missed two items still ran.
+
+    The run of 2026-08-22 filtered 141 items down to 13 and went red anyway,
+    reporting "the gate did not run", because the pattern matched a bare count
+    with nothing to compare it against. A build that is red on a healthy run is
+    the failure this script exists to prevent, reintroduced one level up.
+    """
+    body = HEALTHY + (
+        "[08/22/26 08:20:20] WARNING  Gate returned no verdict for 2 of 141 "
+        "items; keeping them for the ranker\n"
     )
     *_, collapsed = _parse(tmp_path, body)
     assert collapsed == []

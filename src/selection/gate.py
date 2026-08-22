@@ -104,9 +104,15 @@ def collect(
 
     missing = known - set(seen)
     if missing:
+        # "N of M", not "N": the health check fails the build on a stage that
+        # collapsed, and cannot tell a two-item gap from a total failure unless
+        # the line carries the total. Reporting the bare count made a healthy
+        # run go red on 2026-08-22 with the explanation "the gate did not run",
+        # when it had filtered 141 items down to 13.
         logger.warning(
-            "Gate returned no verdict for %d items; keeping them for the ranker",
+            "Gate returned no verdict for %d of %d items; keeping them for the ranker",
             len(missing),
+            len(known),
         )
     for item_id in missing:
         seen[item_id] = GateVerdict(id=item_id, keep=True, reason="no gate verdict")
