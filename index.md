@@ -90,7 +90,7 @@ Curated by **Bruno Coelho**, technology leadership across Europe, Asia-Pacific a
           <span class="run-time">{{ post.date | date: "%H:%M" }} UTC</span>
           <span class="run-meta">
             <span class="run-count{% if post.items == 0 %} zero{% endif %}">{{ post.items | default: 0 }}</span> flagged
-            <span class="run-sep">/</span> {{ post.analyzed | default: 0 }} analysed
+            <span class="run-sep">/</span> {{ post.analyzed | default: 0 }} analyzed
           </span>
         </a>
       </li>
