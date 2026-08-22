@@ -170,6 +170,17 @@ class FetchReport:
         }
 
 
+# What an edition is called. Held in one place because the same string has to
+# match on the published page, in the feed and in the email subject, and three
+# copies of a name drift.
+EDITION_NAME = "AI Radar"
+
+
+def _edition_date(when: datetime) -> str:
+    """"22 August 2026", with no leading zero on the day."""
+    return f"{when.day} {when:%B %Y}"
+
+
 class HorizonOrchestrator:
     """Orchestrates the complete workflow for content aggregation and analysis."""
 
@@ -362,8 +373,14 @@ class HorizonOrchestrator:
                     front_matter = (
                         "---\n"
                         "layout: default\n"
-                        f"title: \"Horizon Summary: {today} "
-                        f"{now_utc.strftime('%H:%M')} UTC ({lang.upper()})\"\n"
+                        # The edition's own name, not the upstream project's.
+                        # This string is what a subscriber sees in a feed
+                        # reader every day, so it was the most repeated words
+                        # the audience read and none of them were the owner's.
+                        # Language is marked only when it is not the primary
+                        # one, since a suffix on every title is noise.
+                        f"title: \"{EDITION_NAME}, {_edition_date(now_utc)}"
+                        f"{'' if lang == 'en' else f' ({lang.upper()})'}\"\n"
                         # Full timestamp, not just the date: Jekyll orders posts
                         # by this field, and with several runs a day a date-only
                         # value leaves same-day posts in an arbitrary order.
@@ -421,7 +438,10 @@ class HorizonOrchestrator:
                         f"{self.icons['email']} Sending {lang.upper()} email summary..."
                     )
                     subscribers = self.storage.load_subscribers()
-                    subject = f"Horizon Summary ({lang.upper()}) - {today}"
+                    subject = (
+                        f"{EDITION_NAME}, {_edition_date(now_utc)}"
+                        f"{'' if lang == 'en' else f' ({lang.upper()})'}"
+                    )
                     self.email_manager.send_daily_summary(summary, subject, subscribers)
 
                 # Send webhook notification if configured
